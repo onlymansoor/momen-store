@@ -39,7 +39,7 @@ export default function NewProductPage() {
     cost_price: '',
     sku: '',
     barcode: '',
-    stock_quantity: '0',
+    stock_quantity: '10',
     low_stock_threshold: '5',
     is_featured: false,
     is_best_seller: false,
@@ -53,6 +53,8 @@ export default function NewProductPage() {
   });
   const [tagInput, setTagInput] = useState('');
   const [images, setImages] = useState<{ file: File; preview: string }[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [urlInput, setUrlInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -147,8 +149,9 @@ export default function NewProductPage() {
 
       if (error) throw error;
 
-      if (images.length > 0 && product) {
+      if (product) {
         setUploading(true);
+        const allImages = [...imageUrls];
         for (let i = 0; i < images.length; i++) {
           const ext = images[i].file.name.split('.').pop();
           const filePath = `products/${product.id}/${Date.now()}-${i}.${ext}`;
@@ -156,15 +159,21 @@ export default function NewProductPage() {
             .from('products')
             .upload(filePath, images[i].file);
 
-          if (uploadError) throw uploadError;
+          if (uploadError) {
+            toast.error('Image upload failed - storage bucket may not exist');
+            continue;
+          }
 
           const { data: { publicUrl } } = supabase.storage
             .from('products')
             .getPublicUrl(filePath);
+          allImages.push(publicUrl);
+        }
 
+        for (let i = 0; i < allImages.length; i++) {
           await supabase.from('product_images').insert({
             product_id: product.id,
-            image_url: publicUrl,
+            image_url: allImages[i],
             is_primary: i === 0,
             sort_order: i,
           });
@@ -282,6 +291,37 @@ export default function NewProductPage() {
               onChange={handleImageUpload}
               className="hidden"
             />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={urlInput}
+                onChange={e => setUrlInput(e.target.value)}
+                placeholder="Or paste image URL and press Add"
+                className="flex-1 h-10 rounded-lg glass px-3 text-sm text-white placeholder:text-white-muted outline-none focus:ring-2 focus:ring-accent/50"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  if (urlInput.trim()) {
+                    setImageUrls(prev => [...prev, urlInput.trim()]);
+                    setUrlInput('');
+                  }
+                }}
+              >
+                Add
+              </Button>
+            </div>
+            {imageUrls.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {imageUrls.map((url, i) => (
+                  <div key={i} className="relative group aspect-square rounded-lg overflow-hidden bg-white/5">
+                    <img src={url} alt="" className="h-full w-full object-cover" onError={e => { (e.target as HTMLImageElement).src = ''; (e.target as HTMLImageElement).classList.add('hidden') }} />
+                    <button type="button" onClick={() => setImageUrls(prev => prev.filter((_, j) => j !== i))} className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500/80 text-white">X</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
 
           <Card className="p-5 space-y-4">

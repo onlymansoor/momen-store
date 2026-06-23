@@ -31,6 +31,8 @@ export default function EditProductPage() {
   const [uploading, setUploading] = useState(false);
   const [productImages, setProductImages] = useState<ProductImage[]>([]);
   const [newImages, setNewImages] = useState<{ file: File; preview: string }[]>([]);
+  const [newImageUrls, setNewImageUrls] = useState<string[]>([]);
+  const [urlInput, setUrlInput] = useState('');
   const [deleteImageId, setDeleteImageId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
@@ -46,7 +48,7 @@ export default function EditProductPage() {
     cost_price: '',
     sku: '',
     barcode: '',
-    stock_quantity: '0',
+    stock_quantity: '10',
     low_stock_threshold: '5',
     is_featured: false,
     is_best_seller: false,
@@ -197,18 +199,22 @@ export default function EditProductPage() {
       const { error } = await supabase.from('products').update(productData).eq('id', id);
       if (error) throw error;
 
-      if (newImages.length > 0) {
+      if (newImages.length > 0 || newImageUrls.length > 0) {
         setUploading(true);
         const startOrder = productImages.length;
+        const allNew = [...newImageUrls];
         for (let i = 0; i < newImages.length; i++) {
           const ext = newImages[i].file.name.split('.').pop();
           const filePath = `products/${id}/${Date.now()}-${i}.${ext}`;
           const { error: uploadError } = await supabase.storage.from('products').upload(filePath, newImages[i].file);
-          if (uploadError) throw uploadError;
+          if (uploadError) { toast.error('Upload failed - storage bucket may not exist'); continue; }
           const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(filePath);
+          allNew.push(publicUrl);
+        }
+        for (let i = 0; i < allNew.length; i++) {
           await supabase.from('product_images').insert({
             product_id: id,
-            image_url: publicUrl,
+            image_url: allNew[i],
             is_primary: productImages.length === 0 && i === 0,
             sort_order: startOrder + i,
           });
@@ -330,6 +336,20 @@ export default function EditProductPage() {
               </button>
             </div>
             <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
+            <div className="flex gap-2">
+              <input type="text" value={urlInput} onChange={e => setUrlInput(e.target.value)} placeholder="Or paste image URL and press Add" className="flex-1 h-10 rounded-lg glass px-3 text-sm text-white placeholder:text-white-muted outline-none focus:ring-2 focus:ring-accent/50" />
+              <Button type="button" variant="secondary" onClick={() => { if (urlInput.trim()) { setNewImageUrls(prev => [...prev, urlInput.trim()]); setUrlInput(''); } }}>Add</Button>
+            </div>
+            {newImageUrls.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {newImageUrls.map((url, i) => (
+                  <div key={i} className="relative group aspect-square rounded-lg overflow-hidden bg-white/5">
+                    <img src={url} alt="" className="h-full w-full object-cover" onError={e => { (e.target as HTMLImageElement).src = ''; (e.target as HTMLImageElement).classList.add('hidden') }} />
+                    <button type="button" onClick={() => setNewImageUrls(prev => prev.filter((_, j) => j !== i))} className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500/80 text-white"><X className="h-3 w-3" /></button>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
 
           <Card className="p-5 space-y-4">
