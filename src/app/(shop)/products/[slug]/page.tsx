@@ -337,7 +337,7 @@ export default function ProductDetailPage() {
                                 ))}
                               </div>
                             )}
-                            <Badge variant="ghost" className="mt-2 text-[10px]">Verified Purchase</Badge>
+                            <Badge variant="info" className="mt-2 text-[10px]">Verified Purchase</Badge>
                           </div>
                         ))
                       )}
