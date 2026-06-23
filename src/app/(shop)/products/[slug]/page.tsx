@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Heart, ShoppingBag, Share2, ChevronLeft, Star, Truck, ShieldCheck, RotateCcw, MessageCircle, Check } from 'lucide-react';
+import { Heart, ShoppingBag, Share2, ChevronLeft, Star, Truck, ShieldCheck, RotateCcw, MessageCircle, Camera } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrice, cn, calculateDiscount, truncate } from '@/lib/utils';
 import { useCartStore } from '@/lib/store/cart-store';
@@ -33,8 +33,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [reviewForm, setReviewForm] = useState({ rating: 0, title: '', comment: '' });
-  const [submittingReview, setSubmittingReview] = useState(false);
+
 
   useEffect(() => {
     async function fetchData() {
@@ -60,7 +59,7 @@ export default function ProductDetailPage() {
       }
       const { data: reviewsData } = await supabase
         .from('reviews')
-        .select('*, customer:customers(id, name)')
+        .select('*, customer:customers(id, name), images:review_images(*)')
         .eq('product_id', productData?.id)
         .eq('is_approved', true)
         .order('created_at', { ascending: false });
@@ -70,30 +69,6 @@ export default function ProductDetailPage() {
     }
     fetchData();
   }, [slug]);
-
-  const handleAddReview = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reviewForm.rating) {
-      toast.error('Please select a rating');
-      return;
-    }
-    setSubmittingReview(true);
-    const supabase = createClient();
-    const { error } = await supabase.from('reviews').insert({
-      product_id: product!.id,
-      rating: reviewForm.rating,
-      title: reviewForm.title,
-      comment: reviewForm.comment,
-      is_approved: false,
-    });
-    if (error) {
-      toast.error('Failed to submit review');
-    } else {
-      toast.success('Review submitted for approval');
-      setReviewForm({ rating: 0, title: '', comment: '' });
-    }
-    setSubmittingReview(false);
-  };
 
   if (loading) {
     return (
@@ -333,12 +308,12 @@ export default function ProductDetailPage() {
                               <div className="flex items-center gap-3">
                                 <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center">
                                   <span className="text-xs font-semibold text-accent">
-                                    {review.customer?.name?.charAt(0) || 'A'}
+                                    {(review as any).customer_name?.charAt(0) || review.customer?.name?.charAt(0) || 'A'}
                                   </span>
                                 </div>
                                 <div>
                                   <p className="text-sm font-medium text-white">
-                                    {review.customer?.name || 'Anonymous'}
+                                    {(review as any).customer_name || review.customer?.name || 'Anonymous'}
                                   </p>
                                   <p className="text-xs text-white-muted">
                                     {new Date(review.created_at).toLocaleDateString('en-PK', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -353,48 +328,33 @@ export default function ProductDetailPage() {
                             {review.comment && (
                               <p className="text-sm text-white-muted mt-1 leading-relaxed">{review.comment}</p>
                             )}
+                            {(review as any).images?.length > 0 && (
+                              <div className="flex gap-2 mt-3 flex-wrap">
+                                {(review as any).images.map((img: any) => (
+                                  <a key={img.id} href={img.image_url} target="_blank" rel="noopener noreferrer" className="h-16 w-16 rounded-lg overflow-hidden bg-white/5 hover:ring-2 ring-accent/50 transition-all">
+                                    <img src={img.image_url} alt="" className="h-full w-full object-cover" />
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                            <Badge variant="ghost" className="mt-2 text-[10px]">Verified Purchase</Badge>
                           </div>
                         ))
                       )}
                     </div>
 
-                    {/* Review Form */}
-                    <div className="glass rounded-2xl p-6 sm:p-8">
-                      <h3 className="text-lg font-semibold text-white mb-4">Write a Review</h3>
-                      <form onSubmit={handleAddReview} className="space-y-4">
-                        <div>
-                          <label className="block text-sm text-white-muted mb-2">Your Rating *</label>
-                          <StarRating
-                            rating={reviewForm.rating}
-                            interactive
-                            onChange={(r) => setReviewForm((prev) => ({ ...prev, rating: r }))}
-                            size={28}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-white-muted mb-1">Title</label>
-                          <input
-                            value={reviewForm.title}
-                            onChange={(e) => setReviewForm((prev) => ({ ...prev, title: e.target.value }))}
-                            placeholder="Great product!"
-                            className="w-full h-10 rounded-lg glass px-3 text-sm text-white placeholder:text-white-muted outline-none focus:ring-2 focus:ring-accent/50"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-white-muted mb-1">Comment</label>
-                          <textarea
-                            value={reviewForm.comment}
-                            onChange={(e) => setReviewForm((prev) => ({ ...prev, comment: e.target.value }))}
-                            placeholder="Share your experience..."
-                            rows={4}
-                            className="w-full rounded-lg glass px-3 py-2 text-sm text-white placeholder:text-white-muted outline-none focus:ring-2 focus:ring-accent/50 resize-none"
-                          />
-                        </div>
-                        <Button type="submit" loading={submittingReview}>
-                          <Check className="h-4 w-4" />
-                          Submit Review
+                    {/* Review CTA */}
+                    <div className="glass rounded-2xl p-6 sm:p-8 text-center">
+                      <Camera className="mx-auto h-10 w-10 text-accent/60 mb-3" />
+                      <h3 className="text-lg font-semibold text-white mb-2">Have You Purchased This Product?</h3>
+                      <p className="text-sm text-white-muted max-w-md mx-auto mb-4">
+                        Only verified buyers can leave reviews. After your purchase, you'll receive a custom review link with your order. Share your experience and upload photos!
+                      </p>
+                      <Link href={`/products?category=${product.category?.slug || ''}`}>
+                        <Button variant="primary">
+                          <ShoppingBag className="h-4 w-4" /> Buy Now to Review
                         </Button>
-                      </form>
+                      </Link>
                     </div>
                   </div>
                 ),

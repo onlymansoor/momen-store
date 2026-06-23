@@ -11,6 +11,7 @@ import {
   CheckCircle,
   XCircle,
   MessageSquare,
+  Copy,
 } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -195,7 +196,20 @@ export default function OrderDetailPage() {
                       {formatPrice(item.price)} x {item.quantity}
                     </p>
                   </div>
-                  <p className="text-sm font-medium text-accent">{formatPrice(item.subtotal)}</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        const url = `${window.location.origin}/review?order=${order.id}&product=${item.product_id}`;
+                        navigator.clipboard.writeText(url);
+                        toast.success('Review link copied!');
+                      }}
+                      className="flex items-center gap-1 text-xs text-accent hover:text-accent-light transition-colors"
+                      title="Copy review link for customer"
+                    >
+                      <Copy className="h-3 w-3" /> Review Link
+                    </button>
+                    <p className="text-sm font-medium text-accent">{formatPrice(item.subtotal)}</p>
+                  </div>
                 </div>
               ))}
             </div>
