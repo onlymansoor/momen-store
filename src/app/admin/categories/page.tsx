@@ -8,6 +8,7 @@ import {
   Trash2,
   Image as ImageIcon,
   Grid3X3,
+  Upload,
 } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -32,7 +33,10 @@ export default function CategoriesPage() {
   const [deleting, setDeleting] = useState(false);
   const supabase = createClient();
 
-  const [form, setForm] = useState({ name: '', slug: '', description: '', is_active: true });
+  const [form, setForm] = useState({ name: '', slug: '', description: '', is_active: true, image_url: '' });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => { loadCategories(); }, []);
@@ -54,7 +58,9 @@ export default function CategoriesPage() {
 
   function openAdd() {
     setEditingCategory(null);
-    setForm({ name: '', slug: '', description: '', is_active: true });
+    setForm({ name: '', slug: '', description: '', is_active: true, image_url: '' });
+    setImageFile(null);
+    setImagePreview('');
     setErrors({});
     setModalOpen(true);
   }
@@ -66,7 +72,10 @@ export default function CategoriesPage() {
       slug: cat.slug,
       description: cat.description || '',
       is_active: cat.is_active,
+      image_url: cat.image_url || '',
     });
+    setImageFile(null);
+    setImagePreview(cat.image_url || '');
     setErrors({});
     setModalOpen(true);
   }
@@ -88,6 +97,7 @@ export default function CategoriesPage() {
         slug: form.slug.trim(),
         description: form.description.trim() || null,
         is_active: form.is_active,
+        image_url: form.image_url.trim() || null,
       };
 
       if (editingCategory) {
@@ -192,6 +202,40 @@ export default function CategoriesPage() {
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-white-muted">Description</label>
             <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} className="w-full rounded-lg glass px-3 py-2 text-sm text-white placeholder:text-white-muted outline-none focus:ring-2 focus:ring-accent/50 resize-none" />
+          </div>
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-white-muted">Image</label>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                placeholder="Or paste image URL"
+                value={form.image_url}
+                onChange={e => { setForm(p => ({ ...p, image_url: e.target.value })); setImagePreview(e.target.value); }}
+                className="flex-1 h-10 rounded-lg glass px-3 text-sm text-white placeholder:text-white-muted outline-none focus:ring-2 focus:ring-accent/50"
+              />
+              <label className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg glass hover:bg-white/10 transition-colors">
+                <Upload className="h-4 w-4 text-white-muted" />
+                <input type="file" accept="image/*" className="hidden" onChange={async e => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setImageUploading(true);
+                  try {
+                    const fd = new FormData();
+                    fd.append('file', file);
+                    fd.append('bucket', 'products');
+                    const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                    const json = await res.json();
+                    if (json.url) { setForm(p => ({ ...p, image_url: json.url })); setImagePreview(json.url); }
+                    else toast.error('Upload failed - use URL instead');
+                  } catch { toast.error('Upload failed - use URL instead'); }
+                  finally { setImageUploading(false); }
+                }} />
+              </label>
+            </div>
+            {imagePreview && (
+              <img src={imagePreview} alt="" className="h-24 w-full rounded-lg object-cover bg-white/5" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+            )}
+            {imageUploading && <p className="text-xs text-white-muted animate-pulse">Uploading...</p>}
           </div>
           <label className="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" checked={form.is_active} onChange={e => setForm(p => ({ ...p, is_active: e.target.checked }))} className="h-4 w-4 rounded border-white/20 bg-white/5 text-accent focus:ring-accent/50" />
