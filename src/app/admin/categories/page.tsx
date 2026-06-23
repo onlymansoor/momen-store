@@ -23,6 +23,12 @@ import { generateSlug } from '@/lib/utils';
 import type { Category } from '@/lib/types';
 import toast from 'react-hot-toast';
 
+function CategoryImage({ url, name }: { url?: string | null; name: string }) {
+  const [error, setError] = useState(false);
+  if (!url || error) return <ImageIcon className="h-6 w-6 text-white-muted" />;
+  return <img src={url} alt={name} className="h-full w-full object-cover" onError={() => setError(true)} />;
+}
+
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<(Category & { product_count?: number })[]>([]);
   const [loading, setLoading] = useState(true);
@@ -162,12 +168,8 @@ export default function CategoriesPage() {
             >
               <Card className="p-5">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white/5 overflow-hidden">
-                    {cat.image_url ? (
-                      <img src={cat.image_url} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <ImageIcon className="h-6 w-6 text-white-muted" />
-                    )}
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-white/5 overflow-hidden border border-white/10">
+                    <CategoryImage url={cat.image_url} name={cat.name} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-white font-semibold truncate">{cat.name}</h3>
@@ -233,9 +235,12 @@ export default function CategoriesPage() {
                 }} />
               </label>
             </div>
-            {imagePreview && (
-              <img src={imagePreview} alt="" className="h-24 w-full rounded-lg object-cover bg-white/5" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-            )}
+            {imagePreview ? (
+              <div className="relative h-24 rounded-lg overflow-hidden bg-white/5 border border-white/10">
+                <img src={imagePreview} alt="" className="h-full w-full object-contain" onError={e => { (e.target as HTMLImageElement).src = ''; (e.target as HTMLImageElement).classList.add('hidden') }} />
+                <div className="absolute inset-0 flex items-center justify-center text-white-muted/40 text-xs pointer-events-none">Preview</div>
+              </div>
+            ) : null}
             {imageUploading && <p className="text-xs text-white-muted animate-pulse">Uploading...</p>}
           </div>
           <label className="flex items-center gap-3 cursor-pointer">
