@@ -8,6 +8,7 @@ import Breadcrumb from '@/components/ui/Breadcrumb';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import StarRating from '@/components/ui/StarRating';
+import Turnstile from '@/components/ui/Turnstile';
 import toast from 'react-hot-toast';
 
 const STORE_INFO = [
@@ -20,6 +21,7 @@ const STORE_INFO = [
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
+  const [cfToken, setCfToken] = useState('');
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -55,6 +57,7 @@ export default function ContactPage() {
           subject: form.subject,
           message: form.message,
           rating: form.rating || null,
+          cf_token: cfToken,
         }),
       });
 
@@ -130,6 +133,7 @@ export default function ContactPage() {
                     size={28}
                   />
                 </div>
+                <Turnstile onToken={setCfToken} />
                 <Button type="submit" size="lg" loading={loading}>
                   <Send className="h-4 w-4" />
                   Send Message

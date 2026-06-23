@@ -28,11 +28,29 @@ async function sendDiscordNotification(contact: any) {
   } catch {}
 }
 
+const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY;
+
+async function verifyTurnstile(token: string): Promise<boolean> {
+  if (!TURNSTILE_SECRET) return true;
+  try {
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: TURNSTILE_SECRET, response: token }),
+    });
+    const data = await res.json();
+    return data.success === true;
+  } catch { return false; }
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { customer_name, customer_email, subject, message, rating } = await request.json();
+    const { customer_name, customer_email, subject, message, rating, cf_token } = await request.json();
     if (!customer_name || !subject || !message) {
       return NextResponse.json({ error: 'Name, subject, and message are required' }, { status: 400 });
+    }
+    if (!await verifyTurnstile(cf_token || '')) {
+      return NextResponse.json({ error: 'Captcha verification failed' }, { status: 403 });
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
