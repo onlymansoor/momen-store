@@ -220,14 +220,15 @@ export default function CategoriesPage() {
                   if (!file) return;
                   setImageUploading(true);
                   try {
-                    const fd = new FormData();
-                    fd.append('file', file);
-                    fd.append('bucket', 'products');
-                    const res = await fetch('/api/upload', { method: 'POST', body: fd });
-                    const json = await res.json();
-                    if (json.url) { setForm(p => ({ ...p, image_url: json.url })); setImagePreview(json.url); }
-                    else toast.error('Upload failed - use URL instead');
-                  } catch { toast.error('Upload failed - use URL instead'); }
+                    const ext = file.name.split('.').pop();
+                    const fileName = `categories/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+                    const { data, error } = await supabase.storage.from('products').upload(fileName, file, { upsert: true });
+                    if (error) { toast.error('Upload failed - try pasting a URL'); return; }
+                    const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(data.path);
+                    setForm(p => ({ ...p, image_url: publicUrl }));
+                    setImagePreview(publicUrl);
+                    toast.success('Image uploaded');
+                  } catch { toast.error('Upload failed - try pasting a URL'); }
                   finally { setImageUploading(false); }
                 }} />
               </label>
