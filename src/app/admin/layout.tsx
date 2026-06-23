@@ -68,9 +68,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
 
+  const isLoginPage = pathname === '/admin/login';
+
   useEffect(() => {
-    checkAdmin();
-  }, []);
+    if (!isLoginPage) checkAdmin();
+    else setLoading(false);
+  }, [isLoginPage]);
 
   async function checkAdmin() {
     const supabase = createClient();
