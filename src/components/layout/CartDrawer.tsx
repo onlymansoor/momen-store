@@ -61,7 +61,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <Link
                     href="/products"
                     onClick={onClose}
-                    className="mt-4 text-accent hover:text-accent-light transition-colors"
+                    className="mt-4 inline-flex items-center justify-center px-6 py-2.5 rounded-lg bg-gradient-to-r from-accent to-accent-dark text-primary font-medium hover:from-accent-light hover:to-accent-dark transition-all duration-300"
                   >
                     Start Shopping
                   </Link>
@@ -141,6 +141,13 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   className="block w-full text-center py-2.5 rounded-lg bg-gradient-to-r from-accent to-accent-dark text-primary font-medium hover:from-accent-light hover:to-accent-dark transition-all duration-300"
                 >
                   Checkout
+                </Link>
+                <Link
+                  href="/products"
+                  onClick={onClose}
+                  className="block w-full text-center text-sm text-white-muted hover:text-accent transition-colors"
+                >
+                  Shop Now
                 </Link>
               </div>
             )}

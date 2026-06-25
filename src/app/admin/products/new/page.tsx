@@ -49,6 +49,7 @@ export default function NewProductPage() {
     meta_description: '',
     weight: '',
     dimensions: '',
+    delivery_override: '',
     tags: [] as string[],
   });
   const [tagInput, setTagInput] = useState('');
@@ -133,6 +134,7 @@ export default function NewProductPage() {
         is_active: form.is_active,
         weight: form.weight ? parseFloat(form.weight) : null,
         dimensions: form.dimensions.trim() || null,
+        delivery_override: form.delivery_override ? parseFloat(form.delivery_override) : null,
         meta_title: form.meta_title.trim() || null,
         meta_description: form.meta_description.trim() || null,
         tags: form.tags.length > 0 ? form.tags : null,
@@ -151,7 +153,8 @@ export default function NewProductPage() {
 
       if (product) {
         setUploading(true);
-        const allImages = [...imageUrls];
+        const allImages: string[] = [];
+
         for (let i = 0; i < images.length; i++) {
           const ext = images[i].file.name.split('.').pop();
           const filePath = `products/${product.id}/${Date.now()}-${i}.${ext}`;
@@ -168,6 +171,30 @@ export default function NewProductPage() {
             .from('products')
             .getPublicUrl(filePath);
           allImages.push(publicUrl);
+        }
+
+        for (let i = 0; i < imageUrls.length; i++) {
+          try {
+            const response = await fetch(imageUrls[i]);
+            const blob = await response.blob();
+            const ext = imageUrls[i].split('.').pop()?.split('?')[0] || 'jpg';
+            const filePath = `products/${product.id}/url-${Date.now()}-${i}.${ext}`;
+            const { error: uploadError } = await supabase.storage
+              .from('products')
+              .upload(filePath, blob);
+
+            if (uploadError) {
+              toast.error('URL image upload failed');
+              continue;
+            }
+
+            const { data: { publicUrl } } = supabase.storage
+              .from('products')
+              .getPublicUrl(filePath);
+            allImages.push(publicUrl);
+          } catch {
+            toast.error('Failed to download URL image');
+          }
         }
 
         for (let i = 0; i < allImages.length; i++) {
@@ -340,11 +367,13 @@ export default function NewProductPage() {
           </Card>
 
           <Card className="p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-white">Shipping</h2>
+            <h2 className="text-lg font-semibold text-white">Shipping & Delivery</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="Weight (kg)" type="number" step="0.01" value={form.weight} onChange={e => updateField('weight', e.target.value)} placeholder="0.00" />
               <Input label="Dimensions" value={form.dimensions} onChange={e => updateField('dimensions', e.target.value)} placeholder="10 x 5 x 3 cm" />
             </div>
+            <Input label="Delivery Fee Override (Rs)" type="number" step="0.01" value={form.delivery_override} onChange={e => updateField('delivery_override', e.target.value)} placeholder="Leave blank for route-based pricing" />
+            <p className="text-xs text-white-muted">If set, this flat delivery fee is used for this product regardless of city.</p>
           </Card>
         </div>
 

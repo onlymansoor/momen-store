@@ -10,7 +10,6 @@ import Tabs from '@/components/ui/Tabs';
 import Spinner from '@/components/ui/Spinner';
 import EmptyState from '@/components/ui/EmptyState';
 import Pagination from '@/components/ui/Pagination';
-import { createClient } from '@/lib/supabase/client';
 import { formatPrice, formatDateTime, getOrderStatusColor, getOrderStatusLabel } from '@/lib/utils';
 import type { Order } from '@/lib/types';
 
@@ -34,31 +33,33 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const supabase = createClient();
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
-      let query = supabase.from('orders').select('*', { count: 'exact' });
-
-      if (statusFilter !== 'all') query = query.eq('order_status', statusFilter);
-
-      if (search) {
-        query = query.or(`order_number.ilike.%${search}%,customer_name.ilike.%${search}%`);
+      const params = new URLSearchParams({ page: String(page), pageSize: String(PAGE_SIZE) });
+      const res = await fetch(`/api/admin/orders?${params}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      let filtered = data.orders || [];
+      if (statusFilter !== 'all') {
+        filtered = filtered.filter((o: any) => o.order_status === statusFilter);
       }
-
-      const from = (page - 1) * PAGE_SIZE;
-      query = query.range(from, from + PAGE_SIZE - 1).order('created_at', { ascending: false });
-
-      const { data, count } = await query;
-      setOrders(data || []);
-      setTotalCount(count || 0);
+      if (search) {
+        const s = search.toLowerCase();
+        filtered = filtered.filter((o: any) =>
+          o.order_number?.toLowerCase().includes(s) ||
+          o.customer_name?.toLowerCase().includes(s)
+        );
+      }
+      setOrders(filtered);
+      setTotalCount(data.totalCount || 0);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [search, statusFilter, page, supabase]);
+  }, [search, statusFilter, page]);
 
   useEffect(() => { loadOrders(); }, [loadOrders]);
 

@@ -24,6 +24,11 @@ import {
   LogOut,
   User,
   Search,
+  Truck,
+  MapPin,
+  Route,
+  Ruler,
+  Hash,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -58,6 +63,14 @@ const navItems = [
   { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { label: 'Settings', href: '/admin/settings', icon: Settings },
   { label: 'Admins', href: '/admin/admins', icon: Shield },
+];
+
+const deliveryItems = [
+  { label: 'Cities', href: '/admin/cities', icon: MapPin },
+  { label: 'Delivery Routes', href: '/admin/delivery-routes', icon: Route },
+  { label: 'Furniture Multipliers', href: '/admin/furniture-multipliers', icon: Ruler },
+  { label: 'Quantity Rules', href: '/admin/quantity-rules', icon: Hash },
+  { label: 'Delivery Settings', href: '/admin/delivery-settings', icon: Truck },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -139,6 +152,33 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-300 group',
+                    isActive
+                      ? 'text-accent bg-accent/10 border-l-2 border-accent'
+                      : 'text-white-muted hover:text-white hover:bg-white/5 border-l-2 border-transparent'
+                  )}
+                >
+                  <Icon className={cn('h-5 w-5 shrink-0', isActive ? 'text-accent' : 'text-white-muted group-hover:text-white')} />
+                  {sidebarOpen && <span>{item.label}</span>}
+                </Link>
+              );
+            })}
+            {sidebarOpen && (
+              <div className="pt-4 pb-2">
+                <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-white-muted/50">
+                  Delivery Management
+                </p>
+              </div>
+            )}
+            {deliveryItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href || pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.href}

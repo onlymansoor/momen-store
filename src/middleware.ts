@@ -1,9 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-const protectedRoutes = ['/account', '/orders', '/wishlist', '/checkout'];
+const protectedRoutes = ['/account', '/orders', '/wishlist'];
 const adminProtectedRoutes = ['/admin'];
-const adminAuthRoutes = ['/admin/login'];
 const authRoutes = ['/auth/login', '/auth/register'];
 
 export async function middleware(request: NextRequest) {
@@ -36,16 +35,12 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isAdminRoute = adminProtectedRoutes.some((route) => pathname.startsWith(route) && pathname !== '/admin/login');
-  const isAdminAuthRoute = adminAuthRoutes.some((route) => pathname.startsWith(route));
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
-  if ((isAuthRoute || isAdminAuthRoute) && user) {
-    if (isAdminAuthRoute) {
-      return NextResponse.redirect(new URL('/admin', request.url));
-    }
+  if (isAuthRoute && user) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 

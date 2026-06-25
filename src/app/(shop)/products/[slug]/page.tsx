@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import { formatPrice, cn, calculateDiscount, truncate } from '@/lib/utils';
 import { useCartStore } from '@/lib/store/cart-store';
 import { useWishlistStore } from '@/lib/store/wishlist-store';
+import { useUIStore } from '@/lib/store/ui-store';
 import type { Product, Review } from '@/lib/types';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import Button from '@/components/ui/Button';
@@ -26,6 +27,7 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const { addItem } = useCartStore();
   const { addItem: addToWishlist, removeItem, isInWishlist } = useWishlistStore();
+  const setCartOpen = useUIStore((s) => s.setCartDrawerOpen);
 
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
@@ -194,15 +196,15 @@ export default function ProductDetailPage() {
             <div className="flex flex-wrap gap-4">
               <div className="flex items-center gap-2 text-sm text-white-muted">
                 <Truck className="h-4 w-4 text-accent" />
-                Free delivery on orders over PKR 2,000
+                Fast & Secure Delivery
               </div>
               <div className="flex items-center gap-2 text-sm text-white-muted">
                 <ShieldCheck className="h-4 w-4 text-accent" />
-                Quality guaranteed
+                Quality Guaranteed
               </div>
               <div className="flex items-center gap-2 text-sm text-white-muted">
-                <RotateCcw className="h-4 w-4 text-accent" />
-                7-day easy returns
+                <Star className="h-4 w-4 text-accent" />
+                1000+ Happy Customers
               </div>
             </div>
 
@@ -219,7 +221,9 @@ export default function ProductDetailPage() {
                     price: product.price,
                     image: primaryImage,
                     stock: product.stock_quantity,
+                    delivery_override: product.delivery_override,
                   });
+                  setCartOpen(true);
                   toast.success('Added to cart!');
                 }}
               >

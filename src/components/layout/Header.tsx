@@ -8,6 +8,7 @@ import { Search, ShoppingCart, Heart, User, Menu, ChevronDown } from 'lucide-rea
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/lib/store/cart-store';
 import { useWishlistStore } from '@/lib/store/wishlist-store';
+import { useUIStore } from '@/lib/store/ui-store';
 import { useCategories } from '@/hooks/useCategories';
 import MobileNav from './MobileNav';
 import CartDrawer from './CartDrawer';
@@ -26,9 +27,10 @@ export default function Header() {
   const { categories } = useCategories();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const cartOpen = useUIStore((s) => s.cartDrawerOpen);
+  const setCartOpen = useUIStore((s) => s.setCartDrawerOpen);
 
   return (
     <>

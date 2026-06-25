@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ShoppingBag, ChevronRight, ArrowRight, Sparkles, Star, TrendingUp, Package } from 'lucide-react';
+import { ShoppingBag, ChevronRight, ArrowRight, Sparkles, Heart, Star, TrendingUp, Package } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrice, cn, calculateDiscount, truncate } from '@/lib/utils';
 import { useCartStore } from '@/lib/store/cart-store';
@@ -281,7 +281,7 @@ export default function HomePage() {
               { icon: Package, label: 'Fast Delivery', desc: '' },
               { icon: TrendingUp, label: 'Best Prices', desc: 'Factory direct pricing' },
               { icon: Star, label: 'Premium Quality', desc: '100% authentic products' },
-              { icon: Sparkles, label: 'Easy Returns', desc: '7-day return policy' },
+              { icon: Heart, label: 'Happy Customers', desc: '1000+ happy customers all over the country' },
             ].map((item) => {
               const Icon = item.icon;
               return (

@@ -20,6 +20,7 @@ export default function ReviewPage() {
 
   const [loading, setLoading] = useState(true);
   const [valid, setValid] = useState(false);
+  const [duplicate, setDuplicate] = useState(false);
   const [product, setProduct] = useState<any>(null);
   const [order, setOrder] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -44,6 +45,20 @@ export default function ReviewPage() {
 
       const { data: productData } = await supabase.from('products').select('*').eq('id', productId).single();
       if (!productData) { setLoading(false); return; }
+
+      // Check if review already exists for this order + product
+      const { data: existingReview } = await supabase
+        .from('reviews')
+        .select('id')
+        .eq('order_id', orderId)
+        .eq('product_id', productId)
+        .maybeSingle();
+
+      if (existingReview) {
+        setLoading(false);
+        setDuplicate(true);
+        return;
+      }
 
       setOrder(orderData);
       setProduct(productData);
@@ -121,6 +136,16 @@ export default function ReviewPage() {
   }
 
   if (!valid) {
+    if (duplicate) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+          <Check className="h-12 w-12 text-accent mb-4" />
+          <h2 className="text-xl font-semibold text-white mb-2">Review Already Submitted</h2>
+          <p className="text-sm text-white-muted text-center max-w-md">You have already submitted a review for this order and product. Thank you for your feedback!</p>
+          <Link href="/" className="mt-6 text-accent hover:underline text-sm">Back to Store</Link>
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <ShoppingBag className="h-12 w-12 text-white/20 mb-4" />

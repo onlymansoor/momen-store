@@ -58,6 +58,7 @@ export default function EditProductPage() {
     meta_description: '',
     weight: '',
     dimensions: '',
+    delivery_override: '',
     tags: [] as string[],
   });
   const [tagInput, setTagInput] = useState('');
@@ -92,6 +93,7 @@ export default function EditProductPage() {
           meta_description: p.meta_description || '',
           weight: p.weight?.toString() || '',
           dimensions: p.dimensions || '',
+          delivery_override: p.delivery_override?.toString() || '',
           tags: p.tags || [],
         });
         setProductImages(p.images || []);
@@ -191,6 +193,7 @@ export default function EditProductPage() {
         is_active: form.is_active,
         weight: form.weight ? parseFloat(form.weight) : null,
         dimensions: form.dimensions.trim() || null,
+        delivery_override: form.delivery_override ? parseFloat(form.delivery_override) : null,
         meta_title: form.meta_title.trim() || null,
         meta_description: form.meta_description.trim() || null,
         tags: form.tags.length > 0 ? form.tags : null,
@@ -202,7 +205,8 @@ export default function EditProductPage() {
       if (newImages.length > 0 || newImageUrls.length > 0) {
         setUploading(true);
         const startOrder = productImages.length;
-        const allNew = [...newImageUrls];
+        const allNew: string[] = [];
+
         for (let i = 0; i < newImages.length; i++) {
           const ext = newImages[i].file.name.split('.').pop();
           const filePath = `products/${id}/${Date.now()}-${i}.${ext}`;
@@ -211,6 +215,22 @@ export default function EditProductPage() {
           const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(filePath);
           allNew.push(publicUrl);
         }
+
+        for (let i = 0; i < newImageUrls.length; i++) {
+          try {
+            const response = await fetch(newImageUrls[i]);
+            const blob = await response.blob();
+            const ext = newImageUrls[i].split('.').pop()?.split('?')[0] || 'jpg';
+            const filePath = `products/${id}/url-${Date.now()}-${i}.${ext}`;
+            const { error: uploadError } = await supabase.storage.from('products').upload(filePath, blob);
+            if (uploadError) { toast.error('URL image upload failed'); continue; }
+            const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(filePath);
+            allNew.push(publicUrl);
+          } catch {
+            toast.error('Failed to download URL image');
+          }
+        }
+
         for (let i = 0; i < allNew.length; i++) {
           await supabase.from('product_images').insert({
             product_id: id,
@@ -362,11 +382,13 @@ export default function EditProductPage() {
           </Card>
 
           <Card className="p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-white">Shipping</h2>
+            <h2 className="text-lg font-semibold text-white">Shipping & Delivery</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="Weight (kg)" type="number" step="0.01" value={form.weight} onChange={e => updateField('weight', e.target.value)} />
               <Input label="Dimensions" value={form.dimensions} onChange={e => updateField('dimensions', e.target.value)} />
             </div>
+            <Input label="Delivery Fee Override (Rs)" type="number" step="0.01" value={form.delivery_override} onChange={e => updateField('delivery_override', e.target.value)} placeholder="Leave blank for route-based pricing" />
+            <p className="text-xs text-white-muted">If set, this flat delivery fee is used for this product regardless of city.</p>
           </Card>
         </div>
 

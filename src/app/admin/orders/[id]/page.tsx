@@ -12,6 +12,8 @@ import {
   XCircle,
   MessageSquare,
   Copy,
+  CheckCheck,
+  ExternalLink,
 } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -39,6 +41,17 @@ const statusOptions = [
   { value: 'cancelled', label: 'Cancelled' },
 ];
 
+async function checkReviewSubmitted(orderId: string, productId: string) {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from('reviews')
+    .select('id, created_at')
+    .eq('order_id', orderId)
+    .eq('product_id', productId)
+    .maybeSingle();
+  return data;
+}
+
 export default function OrderDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -48,6 +61,7 @@ export default function OrderDetailPage() {
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [confirmStatus, setConfirmStatus] = useState<OrderStatus | null>(null);
   const [notes, setNotes] = useState('');
+  const [reviewStatuses, setReviewStatuses] = useState<Record<string, { id: string; created_at: string } | null>>({});
   const supabase = createClient();
 
   useEffect(() => { loadOrder(); }, [id]);
@@ -61,6 +75,15 @@ export default function OrderDetailPage() {
         .single();
       setOrder(data);
       setNotes(data?.notes || '');
+      
+      if (data?.items) {
+        const statuses: Record<string, { id: string; created_at: string } | null> = {};
+        for (const item of data.items) {
+          const review = await checkReviewSubmitted(id, item.product_id);
+          statuses[item.product_id] = review;
+        }
+        setReviewStatuses(statuses);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -181,37 +204,45 @@ export default function OrderDetailPage() {
               <h2 className="text-lg font-semibold text-white">Order Items</h2>
             </div>
             <div className="space-y-3">
-              {order.items?.map((item) => (
-                <div key={item.id} className="flex items-center gap-4 p-3 rounded-lg bg-white/5">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-white/5 overflow-hidden">
-                    {item.product_image ? (
-                      <img src={item.product_image} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <ImageIcon className="h-6 w-6 text-white-muted" />
-                    )}
+              {order.items?.map((item) => {
+                const review = item.product_id ? reviewStatuses[item.product_id] : null;
+                return (
+                  <div key={item.id} className="flex items-center gap-4 p-3 rounded-lg bg-white/5">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-white/5 overflow-hidden">
+                      {item.product_image ? (
+                        <img src={item.product_image} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <ImageIcon className="h-6 w-6 text-white-muted" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white">{item.product_name}</p>
+                      <p className="text-xs text-white-muted mt-0.5">
+                        {formatPrice(item.price)} x {item.quantity}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          const url = `${window.location.origin}/review?order=${order.id}&product=${item.product_id}`;
+                          navigator.clipboard.writeText(url);
+                          toast.success('Review link copied!');
+                        }}
+                        className="flex items-center gap-1 text-xs text-accent hover:text-accent-light transition-colors"
+                        title="Copy review link for customer"
+                      >
+                        <Copy className="h-3 w-3" /> Review Link
+                      </button>
+                      {review && (
+                        <span className="flex items-center gap-1 text-xs text-green-400" title={`Review submitted ${new Date(review.created_at).toLocaleDateString()}`}>
+                          <CheckCheck className="h-3 w-3" /> Reviewed
+                        </span>
+                      )}
+                      <p className="text-sm font-medium text-accent">{formatPrice(item.subtotal)}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white">{item.product_name}</p>
-                    <p className="text-xs text-white-muted mt-0.5">
-                      {formatPrice(item.price)} x {item.quantity}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        const url = `${window.location.origin}/review?order=${order.id}&product=${item.product_id}`;
-                        navigator.clipboard.writeText(url);
-                        toast.success('Review link copied!');
-                      }}
-                      className="flex items-center gap-1 text-xs text-accent hover:text-accent-light transition-colors"
-                      title="Copy review link for customer"
-                    >
-                      <Copy className="h-3 w-3" /> Review Link
-                    </button>
-                    <p className="text-sm font-medium text-accent">{formatPrice(item.subtotal)}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="mt-4 pt-4 border-t border-white/10 space-y-1.5">

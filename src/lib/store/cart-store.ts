@@ -8,6 +8,7 @@ interface CartItem {
   image: string;
   quantity: number;
   stock: number;
+  delivery_override?: number;
 }
 
 interface CartStore {

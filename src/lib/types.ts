@@ -64,6 +64,7 @@ export interface Product {
   meta_title?: string;
   meta_description?: string;
   tags?: string[];
+  delivery_override?: number;
   average_rating: number;
   review_count: number;
   sold_count: number;

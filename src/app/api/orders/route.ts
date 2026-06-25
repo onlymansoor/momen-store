@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -10,18 +9,17 @@ function headers(authToken?: string) {
     'Content-Type': 'application/json',
     'apikey': SUPABASE_ANON_KEY,
     'Authorization': authToken ? `Bearer ${authToken}` : `Bearer ${SUPABASE_ANON_KEY}`,
-    'Prefer': 'return=representation',
   };
 }
 
-async function supFetch(method: string, path: string, body?: any, authToken?: string) {
+async function supFetch(method: string, path: string, body?: any) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     method,
-    headers: headers(authToken),
+    headers: headers(),
     body: body ? JSON.stringify(body) : undefined,
   });
   const text = await res.text();
-  if (!res.ok) throw new Error(text.slice(0, 300));
+  if (!res.ok) throw new Error(`[${res.status}] ${text.slice(0, 500)}`);
   return text ? JSON.parse(text) : null;
 }
 
@@ -53,7 +51,7 @@ async function sendDiscordNotification(order: any) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { customer_name, customer_email, customer_phone, shipping_address, shipping_city, shipping_province, shipping_zip, items, payment_method, payment_proof } = body;
+    const { customer_name, customer_email, customer_phone, customer_phone2, shipping_address, shipping_city, shipping_province, shipping_zip, items, payment_method, payment_proof, delivery_charges: clientDelivery } = body;
 
     if (!customer_name || !customer_email || !customer_phone || !shipping_address || !shipping_city || !items?.length || !payment_method) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -62,69 +60,59 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid payment method' }, { status: 400 });
     }
 
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const token = (await supabase.auth.getSession())?.data?.session?.access_token;
-
     const subtotal = items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
-    const delivery_charges = subtotal >= 2000 ? 0 : 200;
+    const delivery_charges = typeof clientDelivery === 'number' ? clientDelivery : 0;
     const total = subtotal + delivery_charges;
 
-    // Generate order number
-    const date = new Date();
-    const prefix = `MM${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;
-    const existing = await supFetch('GET', `orders?order_number=ilike.${prefix}%&select=order_number&limit=1`, undefined, token);
-    const count = Array.isArray(existing) ? existing.length : 0;
-    const order_number = `${prefix}${String(count + 1).padStart(4, '0')}`;
+    // Generate unique order number
+    const now = new Date();
+    const ts = now.getFullYear().toString().slice(-2) +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      String(now.getDate()).padStart(2, '0') +
+      String(now.getHours()).padStart(2, '0') +
+      String(now.getMinutes()).padStart(2, '0') +
+      String(now.getSeconds()).padStart(2, '0');
+    const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const order_number = `MOM${ts}${rand}`;
 
-    // Create order
-    const order = await supFetch('POST', 'orders', {
-      order_number,
-      customer_id: user?.id || null,
-      customer_name,
-      customer_email,
-      customer_phone,
-      shipping_address,
-      shipping_city,
-      shipping_province: shipping_province || null,
-      shipping_zip: shipping_zip || null,
-      subtotal,
-      delivery_charges,
-      discount: 0,
-      total,
-      payment_method,
-      payment_status: payment_method === 'cod' ? 'pending' : 'verification_pending',
-      order_status: payment_method === 'cod' ? 'pending' : 'payment_verification_pending',
-      is_paid: false,
-    }, token);
+    // Create order using SECURITY DEFINER RPC (bypasses RLS)
+    const order = await supFetch('POST', 'rpc/insert_order', {
+      order_data: {
+        order_number,
+        customer_id: null,
+        customer_name,
+        customer_email,
+        customer_phone,
+        customer_phone2: customer_phone2 || null,
+        shipping_address,
+        shipping_city,
+        shipping_province: shipping_province || null,
+        shipping_zip: shipping_zip || null,
+        subtotal,
+        delivery_charges,
+        discount: 0,
+        total,
+        payment_method,
+        payment_status: payment_method === 'cod' ? 'pending' : 'verification_pending',
+        order_status: payment_method === 'cod' ? 'pending' : 'payment_verification_pending',
+        is_paid: false,
+      },
+    });
 
-    const orderData = Array.isArray(order) ? order[0] : order;
+    const orderData = order;
 
-    // Create order items
-    const orderItems = items.map((item: any) => ({
-      order_id: orderData.id,
-      product_id: item.product_id || null,
-      product_name: item.product_name,
-      product_image: item.product_image || null,
-      price: item.price,
-      quantity: item.quantity,
-      subtotal: item.price * item.quantity,
-    }));
-
-    await supFetch('POST', 'order_items', orderItems, token);
-
-    // Decrement stock
-    for (const item of items) {
-      if (item.product_id) {
-        const product = await supFetch('GET', `products?id=eq.${item.product_id}&select=stock_quantity`, undefined, token);
-        const prodData = Array.isArray(product) ? product[0] : product;
-        if (prodData) {
-          await supFetch('PATCH', `products?id=eq.${item.product_id}`, {
-            stock_quantity: Math.max(0, (prodData.stock_quantity || 0) - item.quantity),
-          }, token);
-        }
-      }
-    }
+    // Create order items using SECURITY DEFINER RPC
+    await supFetch('POST', 'rpc/insert_order_items', {
+      items_data: items.map((item: any) => ({
+        order_id: orderData.id,
+        product_id: item.product_id || null,
+        product_name: item.product_name,
+        product_image: item.product_image || null,
+        price: item.price,
+        quantity: item.quantity,
+        subtotal: item.price * item.quantity,
+      })),
+    });
 
     // Payment proof
     if (payment_proof && payment_method === 'easypaisa') {
@@ -133,36 +121,20 @@ export async function POST(request: NextRequest) {
         image_url: payment_proof.image_url,
         account_name: payment_proof.account_name,
         account_number: payment_proof.account_number,
-      }, token);
+      });
     }
 
-    // Fetch full order
-    let fullOrder;
-    try {
-      fullOrder = await supFetch('GET', `orders?id=eq.${orderData.id}&select=*,items:order_items(*)`, undefined, token);
-    } catch {}
+    // Send notification
+    await sendDiscordNotification(orderData);
 
-    await sendDiscordNotification(fullOrder || orderData);
-
-    return NextResponse.json({ message: 'Order created successfully', order: fullOrder || orderData }, { status: 201 });
+    return NextResponse.json({ message: 'Order created successfully', order: orderData }, { status: 201 });
   } catch (error: any) {
-    console.error('Order creation error:', error.message);
+    console.error('FATAL:', error?.message || error);
+    if (error?.stack) console.error('STACK:', error.stack);
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
   }
 }
 
 export async function GET() {
-  try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = (await supabase.auth.getSession())?.data?.session?.access_token;
-    const orders = await supFetch('GET', `orders?customer_id=eq.${user.id}&select=*,items:order_items(*)&order=created_at.desc`, undefined, token);
-    return NextResponse.json({ orders: orders || [] }, { status: 200 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
-  }
+  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 }
