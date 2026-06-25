@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import { formatPrice, cn, calculateDiscount, truncate } from '@/lib/utils';
 import { useCartStore } from '@/lib/store/cart-store';
 import { useWishlistStore } from '@/lib/store/wishlist-store';
+import { useUIStore } from '@/lib/store/ui-store';
 import type { Product, Category, Banner } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -18,6 +19,7 @@ const PLACEHOLDER_IMG = '/placeholder.svg';
 function ProductCard({ product, index }: { product: Product; index: number }) {
   const { addItem } = useCartStore();
   const { addItem: addToWishlist, removeItem, isInWishlist } = useWishlistStore();
+  const setCartOpen = useUIStore((s) => s.setCartDrawerOpen);
   const primaryImage = product.images?.find((i) => i.is_primary)?.image_url || product.images?.[0]?.image_url || PLACEHOLDER_IMG;
   const discount = calculateDiscount(product.price, product.compare_price || 0);
 
@@ -75,7 +77,8 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
           variant="outline"
           className="w-full mt-1"
           onClick={() => {
-            addItem({ product_id: product.id, name: product.name, price: product.price, image: primaryImage, stock: product.stock_quantity });
+            addItem({ product_id: product.id, name: product.name, price: product.price, image: primaryImage, stock: product.stock_quantity, delivery_override: product.delivery_override });
+            setCartOpen(true);
           }}
         >
           <ShoppingBag className="h-3.5 w-3.5" />

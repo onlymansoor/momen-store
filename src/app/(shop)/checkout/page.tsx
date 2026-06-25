@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CreditCard, Building2, Upload, CheckCircle, ArrowLeft, ShieldCheck, Truck, ShoppingBag, MapPin, ChevronDown, Info } from 'lucide-react';
+import { CreditCard, Building2, Upload, CheckCircle, ArrowLeft, ShieldCheck, Truck, ShoppingBag, MapPin, Info } from 'lucide-react';
 import { useCartStore } from '@/lib/store/cart-store';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrice, cn } from '@/lib/utils';
@@ -91,6 +91,8 @@ export default function CheckoutPage() {
   const [selectedCityId, setSelectedCityId] = useState('');
   const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
   const [manualQuote, setManualQuote] = useState(false);
+  const [selectedCity, setSelectedCity] = useState<{ id: string; name: string } | null>(null);
+  const [cityInput, setCityInput] = useState('');
   const [form, setForm] = useState({ name: '', email: '', phone: '', phone2: '', address: '', notes: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -98,7 +100,6 @@ export default function CheckoutPage() {
     fetch('/api/delivery').then(r => r.json()).then(setDeliveryData).catch(() => {});
   }, []);
 
-  const selectedCity = useMemo(() => deliveryData?.cities.find(c => c.id === selectedCityId), [deliveryData, selectedCityId]);
   const totalQty = useMemo(() => items.reduce((sum, i) => sum + i.quantity, 0), [items]);
   const subtotal = getSubtotal();
 
@@ -237,36 +238,50 @@ export default function CheckoutPage() {
                 <Input label="Phone 2 (Optional)" type="tel" value={form.phone2} onChange={(e) => setForm({ ...form, phone2: e.target.value })} placeholder="03XX-XXXXXXX" />
                 <div className="relative">
                   <label className="block text-sm font-medium text-white-muted mb-1">City *</label>
-                  <button
-                    type="button"
-                    onClick={() => setCityDropdownOpen(!cityDropdownOpen)}
-                    className={cn(
-                      'w-full rounded-lg glass px-3 py-2 text-sm text-left flex items-center justify-between',
-                      errors.city ? 'border border-red-500' : '',
-                      !selectedCity && 'text-white-muted'
-                    )}
-                  >
-                    <span className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-accent" />
-                      {selectedCity?.name || 'Select your city'}
-                    </span>
-                    <ChevronDown className={cn('h-4 w-4 transition-transform', cityDropdownOpen && 'rotate-180')} />
-                  </button>
-                  {cityDropdownOpen && deliveryData && (
-                    <div className="absolute z-50 mt-1 w-full rounded-xl glass border border-white/10 shadow-xl max-h-60 overflow-y-auto">
-                      {deliveryData.cities.map((city) => (
-                        <button
-                          key={city.id}
-                          type="button"
-                          onClick={() => { setSelectedCityId(city.id); setCityDropdownOpen(false); }}
-                          className={cn(
-                            'w-full px-4 py-2.5 text-sm text-left flex items-center gap-2 transition-colors',
-                            selectedCityId === city.id ? 'bg-accent/10 text-accent' : 'text-white hover:bg-white/5'
-                          )}
-                        >
-                          <MapPin className="h-3.5 w-3.5 text-accent/50" />
-                          {city.name}
-                        </button>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent" />
+                    <input
+                      type="text"
+                      value={cityInput}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCityInput(val);
+                        const match = deliveryData?.cities.find(c => c.name.toLowerCase() === val.toLowerCase());
+                        if (match) {
+                          setSelectedCityId(match.id);
+                          setSelectedCity(match);
+                        } else {
+                          setSelectedCityId(val ? `custom-${val}` : '');
+                          setSelectedCity(val ? { id: `custom-${val}`, name: val } : null);
+                        }
+                        setErrors(prev => ({ ...prev, city: '' }));
+                      }}
+                      onFocus={() => setCityDropdownOpen(true)}
+                      onBlur={() => setTimeout(() => setCityDropdownOpen(false), 200)}
+                      placeholder="Type your city name"
+                      className={cn(
+                        'w-full rounded-lg bg-[#1a1d2e] border border-white/10 px-3 py-2 pl-9 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-accent/50',
+                        errors.city ? 'border-red-500' : ''
+                      )}
+                    />
+                  </div>
+                  {cityDropdownOpen && deliveryData && cityInput && deliveryData.cities.filter(c => c.name.toLowerCase().includes(cityInput.toLowerCase())).length > 0 && (
+                    <div className="absolute z-50 mt-1 w-full rounded-xl bg-[#1a1d2e] border border-white/10 shadow-xl max-h-60 overflow-y-auto">
+                      {deliveryData.cities
+                        .filter(c => c.name.toLowerCase().includes(cityInput.toLowerCase()))
+                        .map((city) => (
+                          <button
+                            key={city.id}
+                            type="button"
+                            onMouseDown={() => { setCityInput(city.name); setSelectedCityId(city.id); setSelectedCity(city); setCityDropdownOpen(false); }}
+                            className={cn(
+                              'w-full px-4 py-2.5 text-sm text-left flex items-center gap-2 transition-colors',
+                              selectedCityId === city.id ? 'bg-accent/10 text-accent' : 'text-white hover:bg-white/10'
+                            )}
+                          >
+                            <MapPin className="h-3.5 w-3.5 text-accent/50" />
+                            {city.name}
+                          </button>
                       ))}
                     </div>
                   )}

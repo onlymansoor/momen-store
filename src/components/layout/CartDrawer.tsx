@@ -142,13 +142,6 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 >
                   Checkout
                 </Link>
-                <Link
-                  href="/products"
-                  onClick={onClose}
-                  className="block w-full text-center text-sm text-white-muted hover:text-accent transition-colors"
-                >
-                  Shop Now
-                </Link>
               </div>
             )}
           </motion.div>
