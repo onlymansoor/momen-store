@@ -188,6 +188,7 @@ export default function CheckoutPage() {
             price: item.price,
             quantity: item.quantity,
           })),
+          notes: form.notes || '',
           payment_method: paymentMethod,
           delivery_charges: manualQuote ? 0 : delivery,
           payment_proof: proofImageUrl ? {

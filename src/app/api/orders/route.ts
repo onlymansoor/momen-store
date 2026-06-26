@@ -23,19 +23,26 @@ async function supFetch(method: string, path: string, body?: any) {
   return text ? JSON.parse(text) : null;
 }
 
-async function sendDiscordNotification(order: any) {
+async function sendDiscordNotification(order: any, orderItems: any[]) {
   if (!DISCORD_WEBHOOK_URL) return;
+  const itemsList = orderItems?.map((i: any) => `${i.product_name} x${i.quantity} = PKR ${(i.price * i.quantity).toLocaleString()}`).join('\n') || 'N/A';
   const embed = {
     title: '🛒 New Order Received',
     color: 0x00ff00,
     fields: [
       { name: 'Order Number', value: order.order_number, inline: true },
       { name: 'Customer', value: order.customer_name, inline: true },
-      { name: 'Total', value: `PKR ${order.total.toLocaleString()}`, inline: true },
+      { name: 'Email', value: order.customer_email, inline: true },
+      { name: 'Phone', value: order.customer_phone, inline: true },
+      { name: 'Phone 2', value: order.customer_phone2 || 'N/A', inline: true },
+      { name: 'Shipping Address', value: `${order.shipping_address}, ${order.shipping_city}${order.shipping_province ? `, ${order.shipping_province}` : ''}${order.shipping_zip ? ` - ${order.shipping_zip}` : ''}`, inline: false },
       { name: 'Payment Method', value: order.payment_method.toUpperCase(), inline: true },
       { name: 'Payment Status', value: order.payment_status.replace(/_/g, ' ').toUpperCase(), inline: true },
-      { name: 'Phone', value: order.customer_phone, inline: true },
-      { name: 'Items', value: order.items?.map((i: any) => `${i.product_name} x${i.quantity}`).join('\n') || 'N/A' },
+      { name: 'Subtotal', value: `PKR ${order.subtotal.toLocaleString()}`, inline: true },
+      { name: 'Delivery Charges', value: order.delivery_charges > 0 ? `PKR ${order.delivery_charges.toLocaleString()}` : 'Free', inline: true },
+      { name: 'Total', value: `PKR ${order.total.toLocaleString()}`, inline: true },
+      ...(order.notes ? [{ name: 'Order Notes', value: order.notes, inline: false }] : []),
+      { name: 'Items', value: itemsList },
     ],
     timestamp: new Date().toISOString(),
   };
@@ -51,7 +58,7 @@ async function sendDiscordNotification(order: any) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { customer_name, customer_email, customer_phone, customer_phone2, shipping_address, shipping_city, shipping_province, shipping_zip, items, payment_method, payment_proof, delivery_charges: clientDelivery } = body;
+    const { customer_name, customer_email, customer_phone, customer_phone2, shipping_address, shipping_city, shipping_province, shipping_zip, notes, items, payment_method, payment_proof, delivery_charges: clientDelivery } = body;
 
     if (!customer_name || !customer_email || !customer_phone || !shipping_address || !shipping_city || !items?.length || !payment_method) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -88,6 +95,7 @@ export async function POST(request: NextRequest) {
         shipping_city,
         shipping_province: shipping_province || null,
         shipping_zip: shipping_zip || null,
+        notes: notes || null,
         subtotal,
         delivery_charges,
         discount: 0,
@@ -125,7 +133,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send notification
-    await sendDiscordNotification(orderData);
+    await sendDiscordNotification(orderData, items);
 
     return NextResponse.json({ message: 'Order created successfully', order: orderData }, { status: 201 });
   } catch (error: any) {
