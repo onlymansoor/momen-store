@@ -46,12 +46,23 @@ function calcDeliveryCost(
     return { cost: maxOverride, routeFound: true, breakdown };
   }
 
+  const useGlobalOnly = data.settings.find(s => s.key === 'use_global_only')?.value === 'true';
   const globalPriceSetting = data.settings.find(s => s.key === 'global_delivery_price');
   const globalPrice = globalPriceSetting ? Number(globalPriceSetting.value) : 0;
 
+  // If global-only mode is on, skip routes entirely
+  if (useGlobalOnly) {
+    if (globalPrice > 0) {
+      breakdown.push(`Global delivery rate: ${formatPrice(globalPrice)}`);
+      return { cost: globalPrice, routeFound: true, breakdown };
+    }
+    const msg = data.settings.find(s => s.key === 'manual_quote_message')?.value || 'Delivery charges will be confirmed after order verification.';
+    breakdown.push(msg);
+    return { cost: 0, routeFound: false, breakdown };
+  }
+
   const route = data.routes.find(r => r.to_city.id === cityId);
   if (!route) {
-    // If global price is set, use it as fallback for unlisted cities
     if (globalPrice > 0) {
       breakdown.push(`Global delivery rate: ${formatPrice(globalPrice)}`);
       return { cost: globalPrice, routeFound: true, breakdown };
