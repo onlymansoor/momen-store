@@ -250,6 +250,25 @@ export default function ProductDetailPage() {
               </button>
             </div>
 
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                addItem({
+                  product_id: product.id,
+                  name: product.name,
+                  price: product.price,
+                  image: primaryImage,
+                  stock: product.stock_quantity,
+                  delivery_override: product.delivery_override,
+                });
+                router.push('/checkout');
+              }}
+            >
+              Shop Now
+            </Button>
+
             {product.stock_quantity <= 5 && product.stock_quantity > 0 && (
               <p className="text-sm text-red-400">Only {product.stock_quantity} left in stock</p>
             )}
