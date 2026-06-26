@@ -244,14 +244,15 @@ export default function OrderDetailPage() {
           </div>
         </div>
 
-        {/* Tracking */}
-        {order.tracking_number && (
-          <div className="glass rounded-2xl p-6 mb-6">
-            <h2 className="text-lg font-semibold text-white mb-2">Tracking</h2>
-            <p className="text-sm text-white-muted">Tracking Number:</p>
-            <p className="text-sm font-medium text-accent">{order.tracking_number}</p>
-          </div>
-        )}
+        {/* Tracking ID */}
+        <div className="glass rounded-2xl p-6 mb-6">
+          <h2 className="text-lg font-semibold text-white mb-2">Tracking ID</h2>
+          <p className="text-sm text-white-muted">Use this ID to track your order:</p>
+          <p className="text-lg font-bold text-accent tracking-wider">#{order.order_number}</p>
+          {order.tracking_number && (
+            <p className="text-sm text-white-muted mt-2">Courier Tracking: <span className="text-white font-medium">{order.tracking_number}</span></p>
+          )}
+        </div>
 
         {/* Cancel Order */}
         {order.order_status === 'pending' && (
