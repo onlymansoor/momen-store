@@ -12,6 +12,7 @@ import Breadcrumb from '@/components/ui/Breadcrumb';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Spinner from '@/components/ui/Spinner';
+import ProgressiveImage from '@/components/ui/ProgressiveImage';
 import toast from 'react-hot-toast';
 
 const ORDER_STATUS_FLOW: Record<string, number> = {
@@ -227,11 +228,10 @@ export default function OrderDetailPage() {
             {items.map((item) => (
               <div key={item.id} className="flex items-center gap-4">
                 <div className="relative h-16 w-16 shrink-0 rounded-xl overflow-hidden bg-white/5">
-                  <img
+                  <ProgressiveImage
                     src={item.product_image || PLACEHOLDER_IMG}
                     alt={item.product_name}
-                    className="h-full w-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMG; }}
+                    className="h-full w-full"
                   />
                 </div>
                 <div className="flex-1 min-w-0">

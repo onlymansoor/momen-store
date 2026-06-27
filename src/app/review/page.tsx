@@ -10,6 +10,7 @@ import { formatPrice } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import StarRating from '@/components/ui/StarRating';
 import Spinner from '@/components/ui/Spinner';
+import ProgressiveImage from '@/components/ui/ProgressiveImage';
 import toast from 'react-hot-toast';
 
 export default function ReviewPage() {
@@ -164,7 +165,7 @@ export default function ReviewPage() {
           <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/10">
             <div className="h-16 w-16 rounded-xl overflow-hidden bg-white/5 shrink-0">
               {product.images?.[0]?.image_url ? (
-                <img src={product.images[0].image_url} alt={product.name} className="h-full w-full object-cover" />
+                <ProgressiveImage src={product.images[0].image_url} alt={product.name} className="h-full w-full" />
               ) : (
                 <div className="h-full w-full flex items-center justify-center">
                   <ShoppingBag className="h-6 w-6 text-white-muted" />

@@ -9,6 +9,7 @@ import { formatPrice } from '@/lib/utils';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
+import ProgressiveImage from '@/components/ui/ProgressiveImage';
 import toast from 'react-hot-toast';
 
 const PLACEHOLDER_IMG = '/placeholder.svg';
@@ -61,11 +62,10 @@ export default function WishlistPage() {
                   href={`/products/${item.product_id}`}
                   className="relative block overflow-hidden rounded-2xl glass aspect-square mb-3"
                 >
-                  <img
+                  <ProgressiveImage
                     src={item.image || PLACEHOLDER_IMG}
                     alt={item.name}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMG; }}
+                    className="h-full w-full transition-transform duration-500 group-hover:scale-110"
                   />
                   <button
                     onClick={(e) => {

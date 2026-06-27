@@ -17,6 +17,7 @@ import SearchBar from '@/components/ui/SearchBar';
 import Select from '@/components/ui/Select';
 import Pagination from '@/components/ui/Pagination';
 import Spinner from '@/components/ui/Spinner';
+import ProgressiveImage from '@/components/ui/ProgressiveImage';
 
 const PLACEHOLDER_IMG = '/placeholder.svg';
 const PRICE_RANGES = [
@@ -342,7 +343,7 @@ function ProductsContent() {
                           className="glass rounded-2xl p-4 flex gap-4"
                         >
                           <Link href={`/products/${product.slug}`} className="relative w-28 h-28 sm:w-36 sm:h-36 shrink-0 rounded-xl overflow-hidden">
-                            <img src={primaryImage} alt={product.name} className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMG; }} />
+                            <ProgressiveImage src={primaryImage} alt={product.name} className="h-full w-full" />
                             {discount > 0 && <Badge variant="gold" className="absolute top-1 left-1">-{discount}%</Badge>}
                           </Link>
                           <div className="flex-1 min-w-0 flex flex-col justify-between">
@@ -381,7 +382,7 @@ function ProductsContent() {
                       >
                         <Link href={`/products/${product.slug}`} className="group block">
                           <div className="relative overflow-hidden rounded-2xl glass aspect-square mb-3">
-                            <img src={primaryImage} alt={product.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMG; }} />
+                            <ProgressiveImage src={primaryImage} alt={product.name} className="h-full w-full transition-transform duration-500 group-hover:scale-110" />
                             {discount > 0 && <Badge variant="gold" className="absolute top-2 left-2">-{discount}%</Badge>}
                             <button
                               onClick={(e) => {

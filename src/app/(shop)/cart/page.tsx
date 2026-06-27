@@ -10,6 +10,7 @@ import Breadcrumb from '@/components/ui/Breadcrumb';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
+import ProgressiveImage from '@/components/ui/ProgressiveImage';
 import toast from 'react-hot-toast';
 
 const DELIVERY_CHARGES = 200;
@@ -70,11 +71,10 @@ export default function CartPage() {
                 className="glass rounded-2xl p-4 flex gap-4"
               >
                 <div className="relative h-24 w-24 sm:h-28 sm:w-28 shrink-0 rounded-xl overflow-hidden bg-white/5">
-                  <img
+                  <ProgressiveImage
                     src={item.image || PLACEHOLDER_IMG}
                     alt={item.name}
-                    className="h-full w-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMG; }}
+                    className="h-full w-full"
                   />
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-between">

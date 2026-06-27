@@ -5,6 +5,7 @@ import { X, Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '@/lib/store/cart-store';
 import { formatPrice } from '@/lib/utils';
 import Link from 'next/link';
+import ProgressiveImage from '@/components/ui/ProgressiveImage';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -73,13 +74,10 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     className="flex gap-3 glass rounded-xl p-3"
                   >
                     <div className="relative h-20 w-20 shrink-0 rounded-lg overflow-hidden bg-white/5">
-                      <img
+                      <ProgressiveImage
                         src={item.image || PLACEHOLDER_IMG}
                         alt={item.name}
-                        className="h-full w-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = PLACEHOLDER_IMG;
-                        }}
+                        className="h-full w-full"
                       />
                     </div>
                     <div className="flex-1 min-w-0">

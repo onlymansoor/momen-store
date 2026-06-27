@@ -13,6 +13,7 @@ import type { Product, Category, Banner } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Spinner from '@/components/ui/Spinner';
+import ProgressiveImage from '@/components/ui/ProgressiveImage';
 
 const PLACEHOLDER_IMG = '/placeholder.svg';
 
@@ -32,11 +33,10 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
     >
       <Link href={`/products/${product.slug}`} className="group block">
         <div className="relative overflow-hidden rounded-2xl glass aspect-square mb-3">
-          <img
+          <ProgressiveImage
             src={primaryImage}
             alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-            onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMG; }}
+            className="h-full w-full transition-transform duration-500 group-hover:scale-110"
           />
           {discount > 0 && (
             <Badge variant="gold" className="absolute top-2 left-2">
@@ -101,11 +101,10 @@ function CategoryCard({ category, index }: { category: Category; index: number }
         href={`/products?category=${category.slug}`}
         className="group relative block overflow-hidden rounded-2xl glass aspect-[4/3]"
       >
-        <img
+        <ProgressiveImage
           src={category.image_url || PLACEHOLDER_IMG}
           alt={category.name}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-          onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMG; }}
+          className="h-full w-full transition-transform duration-500 group-hover:scale-110"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4">

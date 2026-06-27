@@ -18,6 +18,7 @@ import QuantitySelector from '@/components/ui/QuantitySelector';
 import StarRating from '@/components/ui/StarRating';
 import Tabs from '@/components/ui/Tabs';
 import Spinner from '@/components/ui/Spinner';
+import ProgressiveImage from '@/components/ui/ProgressiveImage';
 import toast from 'react-hot-toast';
 
 const PLACEHOLDER_IMG = '/placeholder.svg';
@@ -119,11 +120,10 @@ export default function ProductDetailPage() {
               animate={{ opacity: 1 }}
               className="relative aspect-square rounded-2xl glass overflow-hidden"
             >
-              <img
+              <ProgressiveImage
                 src={images[selectedImage]?.image_url || PLACEHOLDER_IMG}
                 alt={images[selectedImage]?.alt_text || product.name}
-                className="h-full w-full object-cover"
-                onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMG; }}
+                className="h-full w-full"
               />
               {discount > 0 && (
                 <Badge variant="gold" className="absolute top-4 left-4 text-sm px-3 py-1">
@@ -142,11 +142,10 @@ export default function ProductDetailPage() {
                       i === selectedImage ? 'border-accent' : 'border-transparent glass opacity-60 hover:opacity-100'
                     )}
                   >
-                    <img
+                    <ProgressiveImage
                       src={img.image_url}
                       alt={img.alt_text || `View ${i + 1}`}
-                      className="h-full w-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMG; }}
+                      className="h-full w-full"
                     />
                   </button>
                 ))}
@@ -357,7 +356,7 @@ export default function ProductDetailPage() {
                               <div className="flex gap-2 mt-3 flex-wrap">
                                 {(review as any).images.map((img: any) => (
                                   <a key={img.id} href={img.image_url} target="_blank" rel="noopener noreferrer" className="h-16 w-16 rounded-lg overflow-hidden bg-white/5 hover:ring-2 ring-accent/50 transition-all">
-                                    <img src={img.image_url} alt="" className="h-full w-full object-cover" />
+                                    <ProgressiveImage src={img.image_url} alt="" className="h-full w-full" />
                                   </a>
                                 ))}
                               </div>
@@ -398,7 +397,7 @@ export default function ProductDetailPage() {
                 return (
                   <Link key={rp.id} href={`/products/${rp.slug}`} className="group">
                     <div className="relative overflow-hidden rounded-2xl glass aspect-square mb-3">
-                      <img src={rpImage} alt={rp.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMG; }} />
+                      <ProgressiveImage src={rpImage} alt={rp.name} className="h-full w-full transition-transform duration-500 group-hover:scale-110" />
                       {calculateDiscount(rp.price, rp.compare_price || 0) > 0 && (
                         <Badge variant="gold" className="absolute top-2 left-2">-{calculateDiscount(rp.price, rp.compare_price || 0)}%</Badge>
                       )}

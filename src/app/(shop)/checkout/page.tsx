@@ -10,6 +10,7 @@ import { formatPrice, cn } from '@/lib/utils';
 import type { PaymentMethod } from '@/lib/types';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import Button from '@/components/ui/Button';
+import ProgressiveImage from '@/components/ui/ProgressiveImage';
 import Input from '@/components/ui/Input';
 import toast from 'react-hot-toast';
 
@@ -475,7 +476,7 @@ export default function CheckoutPage() {
                 {items.map((item) => (
                   <div key={item.product_id} className="flex items-center gap-3">
                     <div className="relative h-14 w-14 shrink-0 rounded-lg overflow-hidden bg-white/5">
-                      <img src={item.image || '/placeholder.svg'} alt={item.name} className="h-full w-full object-cover" />
+                      <ProgressiveImage src={item.image || '/placeholder.svg'} alt={item.name} className="h-full w-full" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-white truncate">{item.name}</p>

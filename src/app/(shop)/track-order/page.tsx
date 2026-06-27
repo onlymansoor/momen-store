@@ -8,6 +8,7 @@ import Breadcrumb from '@/components/ui/Breadcrumb';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Spinner from '@/components/ui/Spinner';
+import ProgressiveImage from '@/components/ui/ProgressiveImage';
 import toast from 'react-hot-toast';
 
 const STATUS_ICONS: Record<string, any> = {
@@ -99,7 +100,7 @@ export default function TrackOrderPage() {
                 {order.items?.map((item: any) => (
                   <div key={item.id} className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-lg bg-white/5 overflow-hidden">
-                      {item.product_image && <img src={item.product_image} alt="" className="h-full w-full object-cover" />}
+                      {item.product_image && <ProgressiveImage src={item.product_image} alt="" className="h-full w-full" />}
                     </div>
                     <div className="flex-1">
                       <p className="text-sm text-white">{item.product_name}</p>
