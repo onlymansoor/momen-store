@@ -23,6 +23,7 @@ import toast from 'react-hot-toast';
 export default function NewProductPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [deliveryInfo, setDeliveryInfo] = useState<{ globalPrice: number; routes: { from: string; to: string; price: number }[] } | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,7 +60,21 @@ export default function NewProductPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    supabase.from('categories').select('*').order('name').then(({ data }) => setCategories(data || []));
+    Promise.all([
+      supabase.from('categories').select('*').order('name'),
+      fetch('/api/delivery').then(r => r.json()),
+    ]).then(([catRes, delData]: any) => {
+      setCategories(catRes.data || []);
+      if (delData?.settings) {
+        const globalS = delData.settings.find((s: any) => s.key === 'global_delivery_price');
+        const routes = (delData.routes || []).map((r: any) => ({
+          from: r.from_city?.name || 'Unknown',
+          to: r.to_city?.name || 'Unknown',
+          price: Number(r.base_price),
+        }));
+        setDeliveryInfo({ globalPrice: globalS ? Number(globalS.value) : 0, routes });
+      }
+    });
   }, [supabase]);
 
   const updateField = (field: string, value: any) => {
@@ -372,8 +387,26 @@ export default function NewProductPage() {
               <Input label="Weight (kg)" type="number" step="0.01" value={form.weight} onChange={e => updateField('weight', e.target.value)} placeholder="0.00" />
               <Input label="Dimensions" value={form.dimensions} onChange={e => updateField('dimensions', e.target.value)} placeholder="10 x 5 x 3 cm" />
             </div>
-            <Input label="Delivery Fee Override (Rs)" type="number" step="0.01" value={form.delivery_override} onChange={e => updateField('delivery_override', e.target.value)} placeholder="Leave blank for route-based pricing" />
-            <p className="text-xs text-white-muted">If set, this flat delivery fee is used for this product regardless of city.</p>
+            <Input label="Custom Delivery Fee (Rs)" type="number" step="0.01" value={form.delivery_override} onChange={e => updateField('delivery_override', e.target.value)} placeholder="Leave empty to use defaults below" />
+            {deliveryInfo && (
+              <div className="glass rounded-lg p-3 space-y-1.5 text-xs">
+                <p className="text-white-muted font-medium mb-1">Default delivery prices from settings:</p>
+                {deliveryInfo.globalPrice > 0 && (
+                  <p className="text-white-muted">Global rate: <span className="text-accent font-medium">Rs {deliveryInfo.globalPrice.toLocaleString()}</span></p>
+                )}
+                {deliveryInfo.routes.length > 0 ? (
+                  <>
+                    <p className="text-white-muted mt-1">Route prices:</p>
+                    {deliveryInfo.routes.slice(0, 5).map((r, i) => (
+                      <p key={i} className="text-white-muted pl-2">{r.from} → {r.to}: <span className="text-accent font-medium">Rs {r.price.toLocaleString()}</span></p>
+                    ))}
+                    {deliveryInfo.routes.length > 5 && <p className="text-white-muted pl-2">...and {deliveryInfo.routes.length - 5} more</p>}
+                  </>
+                ) : (
+                  <p className="text-white-muted">No routes configured</p>
+                )}
+              </div>
+            )}
           </Card>
         </div>
 
