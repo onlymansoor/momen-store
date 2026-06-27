@@ -65,6 +65,7 @@ export interface Product {
   meta_description?: string;
   tags?: string[];
   delivery_override?: number;
+  delivery_overrides?: { route_id: string; price: number }[];
   average_rating: number;
   review_count: number;
   sold_count: number;

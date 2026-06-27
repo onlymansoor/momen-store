@@ -9,6 +9,7 @@ interface CartItem {
   quantity: number;
   stock: number;
   delivery_override?: number;
+  delivery_overrides?: { route_id: string; price: number }[];
 }
 
 interface CartStore {

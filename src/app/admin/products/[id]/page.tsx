@@ -26,7 +26,7 @@ export default function EditProductPage() {
   const params = useParams();
   const id = params.id as string;
   const [categories, setCategories] = useState<Category[]>([]);
-  const [deliveryInfo, setDeliveryInfo] = useState<{ globalPrice: number; routes: { from: string; to: string; price: number }[] } | null>(null);
+  const [deliveryInfo, setDeliveryInfo] = useState<{ globalPrice: number; routes: { id: string; from: string; to: string; price: number }[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -60,6 +60,7 @@ export default function EditProductPage() {
     weight: '',
     dimensions: '',
     delivery_override: '',
+    delivery_overrides: [] as { route_id: string; price: string }[],
     tags: [] as string[],
   });
   const [tagInput, setTagInput] = useState('');
@@ -74,6 +75,7 @@ export default function EditProductPage() {
       setCategories(catRes.data || []);
       const p = prodRes.data as Product;
       if (p) {
+        const existingOverrides = (p.delivery_overrides || []).map((o: any) => ({ route_id: o.route_id, price: o.price.toString() }));
         setForm({
           name: p.name,
           slug: p.slug,
@@ -96,6 +98,7 @@ export default function EditProductPage() {
           weight: p.weight?.toString() || '',
           dimensions: p.dimensions || '',
           delivery_override: p.delivery_override?.toString() || '',
+          delivery_overrides: existingOverrides,
           tags: p.tags || [],
         });
         setProductImages(p.images || []);
@@ -103,6 +106,7 @@ export default function EditProductPage() {
       if (delData?.settings) {
         const globalS = delData.settings.find((s: any) => s.key === 'global_delivery_price');
         const routes = (delData.routes || []).map((r: any) => ({
+          id: r.id,
           from: r.from_city?.name || 'Unknown',
           to: r.to_city?.name || 'Unknown',
           price: Number(r.base_price),
@@ -205,6 +209,7 @@ export default function EditProductPage() {
         weight: form.weight ? parseFloat(form.weight) : null,
         dimensions: form.dimensions.trim() || null,
         delivery_override: form.delivery_override ? parseFloat(form.delivery_override) : null,
+        delivery_overrides: form.delivery_overrides.length > 0 ? form.delivery_overrides.map(o => ({ route_id: o.route_id, price: parseFloat(o.price) })) : null,
         meta_title: form.meta_title.trim() || null,
         meta_description: form.meta_description.trim() || null,
         tags: form.tags.length > 0 ? form.tags : null,
@@ -398,24 +403,37 @@ export default function EditProductPage() {
               <Input label="Weight (kg)" type="number" step="0.01" value={form.weight} onChange={e => updateField('weight', e.target.value)} />
               <Input label="Dimensions" value={form.dimensions} onChange={e => updateField('dimensions', e.target.value)} />
             </div>
-            <Input label="Custom Delivery Fee (Rs)" type="number" step="0.01" value={form.delivery_override} onChange={e => updateField('delivery_override', e.target.value)} placeholder="Leave empty to use defaults below" />
-            {deliveryInfo && (
-              <div className="glass rounded-lg p-3 space-y-1.5 text-xs">
-                <p className="text-white-muted font-medium mb-1">Default delivery prices from settings:</p>
-                {deliveryInfo.globalPrice > 0 && (
-                  <p className="text-white-muted">Global rate: <span className="text-accent font-medium">Rs {deliveryInfo.globalPrice.toLocaleString()}</span></p>
-                )}
-                {deliveryInfo.routes.length > 0 ? (
-                  <>
-                    <p className="text-white-muted mt-1">Route prices:</p>
-                    {deliveryInfo.routes.slice(0, 5).map((r, i) => (
-                      <p key={i} className="text-white-muted pl-2">{r.from} → {r.to}: <span className="text-accent font-medium">Rs {r.price.toLocaleString()}</span></p>
-                    ))}
-                    {deliveryInfo.routes.length > 5 && <p className="text-white-muted pl-2">...and {deliveryInfo.routes.length - 5} more</p>}
-                  </>
-                ) : (
-                  <p className="text-white-muted">No routes configured</p>
-                )}
+            <Input label="Custom Delivery Fee (Rs)" type="number" step="0.01" value={form.delivery_override} onChange={e => updateField('delivery_override', e.target.value)} placeholder="Leave empty to use route overrides below" />
+            <p className="text-xs text-white-muted -mt-2">If set, this overrides ALL route prices below.</p>
+            {deliveryInfo && deliveryInfo.routes.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-white">Per-Route Delivery Overrides</p>
+                <div className="max-h-64 overflow-y-auto space-y-1.5 pr-1">
+                  {deliveryInfo.routes.map((r) => {
+                    const override = form.delivery_overrides.find(o => o.route_id === r.id);
+                    const val = override ? override.price : '';
+                    return (
+                      <div key={r.id} className="flex items-center gap-2 glass rounded-lg px-3 py-2">
+                        <span className="text-xs text-white-muted whitespace-nowrap min-w-[140px]">{r.from} → {r.to}</span>
+                        <span className="text-xs text-white-muted/60">Default: Rs {r.price.toLocaleString()}</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={val}
+                          onChange={e => {
+                            const newOverrides = form.delivery_overrides.filter(o => o.route_id !== r.id);
+                            if (e.target.value !== '') {
+                              newOverrides.push({ route_id: r.id, price: e.target.value });
+                            }
+                            updateField('delivery_overrides', newOverrides);
+                          }}
+                          placeholder="Override"
+                          className="ml-auto w-28 rounded-md bg-white/5 px-2.5 py-1.5 text-xs text-white placeholder:text-white-muted/40 outline-none focus:ring-1 focus:ring-accent/50 text-right"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </Card>

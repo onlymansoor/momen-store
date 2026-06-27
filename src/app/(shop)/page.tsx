@@ -77,7 +77,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
           variant="outline"
           className="w-full mt-1"
           onClick={() => {
-            addItem({ product_id: product.id, name: product.name, price: product.price, image: primaryImage, stock: product.stock_quantity, delivery_override: product.delivery_override });
+            addItem({ product_id: product.id, name: product.name, price: product.price, image: primaryImage, stock: product.stock_quantity, delivery_override: product.delivery_override, delivery_overrides: product.delivery_overrides });
             setCartOpen(true);
           }}
         >

@@ -222,6 +222,7 @@ export default function ProductDetailPage() {
                     image: primaryImage,
                     stock: product.stock_quantity,
                     delivery_override: product.delivery_override,
+                    delivery_overrides: product.delivery_overrides,
                   });
                   setCartOpen(true);
                   toast.success('Added to cart!');
@@ -262,6 +263,7 @@ export default function ProductDetailPage() {
                   image: primaryImage,
                   stock: product.stock_quantity,
                   delivery_override: product.delivery_override,
+                  delivery_overrides: product.delivery_overrides,
                 });
                 router.push('/checkout');
               }}

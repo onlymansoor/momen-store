@@ -18,7 +18,7 @@ const EASYPAISA_ACCOUNTS = [
 ];
 
 interface City { id: string; name: string; }
-interface Route { from_city: { id: string; name: string }; to_city: { id: string; name: string }; base_price: number; home_delivery: boolean; bilty_available: boolean; estimated_days: number; }
+interface Route { id: string; from_city: { id: string; name: string }; to_city: { id: string; name: string }; base_price: number; home_delivery: boolean; bilty_available: boolean; estimated_days: number; }
 interface FurnitureMultiplier { category_name: string; additional_cost: number; }
 interface QuantityRule { min_qty: number; max_qty: number; delivery_type: string; price: number; }
 interface DeliverySetting { key: string; value: string; }
@@ -35,15 +35,31 @@ function calcDeliveryCost(
   data: DeliveryData,
   cityId: string,
   totalQty: number,
-  productOverrides: number[],
+  items: { delivery_override?: number; delivery_overrides?: { route_id: string; price: number }[] }[],
 ): { cost: number; routeFound: boolean; breakdown: string[] } {
   const breakdown: string[] = [];
 
-  // Product-level delivery override takes highest priority
-  const maxOverride = productOverrides.length > 0 ? Math.max(...productOverrides) : 0;
-  if (maxOverride > 0) {
-    breakdown.push(`Product delivery fee: ${formatPrice(maxOverride)}`);
-    return { cost: maxOverride, routeFound: true, breakdown };
+  // Product-level flat override takes highest priority
+  const flatOverrides = items.map(i => i.delivery_override).filter((d): d is number => d != null && d > 0);
+  const maxFlatOverride = flatOverrides.length > 0 ? Math.max(...flatOverrides) : 0;
+  if (maxFlatOverride > 0) {
+    breakdown.push(`Product delivery fee: ${formatPrice(maxFlatOverride)}`);
+    return { cost: maxFlatOverride, routeFound: true, breakdown };
+  }
+
+  // Route-level product overrides (per-route prices on individual products)
+  const route = data.routes.find(r => r.to_city.id === cityId);
+  if (route) {
+    const routeOverrides = items
+      .flatMap(i => i.delivery_overrides || [])
+      .filter(o => o.route_id === route.id)
+      .map(o => o.price)
+      .filter(p => p > 0);
+    if (routeOverrides.length > 0) {
+      const maxRouteOverride = Math.max(...routeOverrides);
+      breakdown.push(`Product route override: ${formatPrice(maxRouteOverride)}`);
+      return { cost: maxRouteOverride, routeFound: true, breakdown };
+    }
   }
 
   const useGlobalOnly = data.settings.find(s => s.key === 'use_global_only')?.value === 'true';
@@ -61,7 +77,6 @@ function calcDeliveryCost(
     return { cost: 0, routeFound: false, breakdown };
   }
 
-  const route = data.routes.find(r => r.to_city.id === cityId);
   if (!route) {
     if (globalPrice > 0) {
       breakdown.push(`Global delivery rate: ${formatPrice(globalPrice)}`);
@@ -114,14 +129,10 @@ export default function CheckoutPage() {
   const totalQty = useMemo(() => items.reduce((sum, i) => sum + i.quantity, 0), [items]);
   const subtotal = getSubtotal();
 
-  const productOverrides = useMemo(() => {
-    return items.map(i => i.delivery_override).filter((d): d is number => d != null && d > 0);
-  }, [items]);
-
   const deliveryInfo = useMemo(() => {
     if (!deliveryData || !selectedCityId) return { cost: 0, routeFound: false, breakdown: [] };
-    return calcDeliveryCost(deliveryData, selectedCityId, totalQty, productOverrides);
-  }, [deliveryData, selectedCityId, totalQty, productOverrides]);
+    return calcDeliveryCost(deliveryData, selectedCityId, totalQty, items);
+  }, [deliveryData, selectedCityId, totalQty, items]);
 
   const delivery = deliveryInfo.cost;
   const total = subtotal + delivery;
