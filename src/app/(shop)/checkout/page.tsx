@@ -13,9 +13,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import toast from 'react-hot-toast';
 
-const EASYPAISA_ACCOUNTS = [
-  { name: 'Momen Store', number: '03334567890', bank: 'Easypaisa' },
-];
+interface EasypaisaAccount { name: string; number: string; bank: string; }
 
 const ALL_PAKISTAN_CITIES = [
   'Abbottabad', 'Ahmedpur East', 'Aliabad', 'Alipur', 'Arifwala', 'Attock', 'Awaran',
@@ -169,6 +167,7 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
   const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const [deliveryData, setDeliveryData] = useState<DeliveryData | null>(null);
+  const [easypaisaAccounts, setEasypaisaAccounts] = useState<EasypaisaAccount[]>([]);
   const [selectedCityId, setSelectedCityId] = useState('');
   const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
   const [manualQuote, setManualQuote] = useState(false);
@@ -179,6 +178,13 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     fetch('/api/delivery').then(r => r.json()).then(setDeliveryData).catch(() => {});
+    const supabase = createClient();
+    supabase.from('settings').select('key,value').in('key', ['easypaisa_account_name', 'easypaisa_account_number']).then(({ data }) => {
+      if (data) {
+        const map = Object.fromEntries(data.map(s => [s.key, s.value]));
+        setEasypaisaAccounts([{ name: map.easypaisa_account_name || 'Momen Store', number: map.easypaisa_account_number || '', bank: 'Easypaisa' }]);
+      }
+    });
   }, []);
 
   const totalQty = useMemo(() => items.reduce((sum, i) => sum + i.quantity, 0), [items]);
@@ -271,8 +277,8 @@ export default function CheckoutPage() {
           delivery_charges: manualQuote ? 0 : delivery,
           payment_proof: proofImageUrl ? {
             image_url: proofImageUrl,
-            account_name: EASYPAISA_ACCOUNTS[0].name,
-            account_number: EASYPAISA_ACCOUNTS[0].number,
+            account_name: easypaisaAccounts[0]?.name || 'Momen Store',
+            account_number: easypaisaAccounts[0]?.number || '',
           } : null,
         }),
       });
@@ -424,7 +430,7 @@ export default function CheckoutPage() {
                   <h3 className="text-sm font-medium text-white">Payment Instructions</h3>
                   <div className="text-sm text-white-muted space-y-1">
                     <p>Send payment to any of the following accounts:</p>
-                    {EASYPAISA_ACCOUNTS.map((acc) => (
+                    {easypaisaAccounts.map((acc) => (
                       <div key={acc.number} className="glass rounded-lg p-3 mt-2">
                         <p className="text-white font-medium">{acc.name}</p>
                         <p className="text-accent font-semibold">{acc.number}</p>
