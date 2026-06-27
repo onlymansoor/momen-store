@@ -17,6 +17,61 @@ const EASYPAISA_ACCOUNTS = [
   { name: 'Momen Store', number: '03334567890', bank: 'Easypaisa' },
 ];
 
+const ALL_PAKISTAN_CITIES = [
+  'Abbottabad', 'Ahmedpur East', 'Aliabad', 'Alipur', 'Arifwala', 'Attock', 'Awaran',
+  'Badin', 'Bahawalnagar', 'Bahawalpur', 'Bannu', 'Barkhan', 'Batgram', 'Bhakkar',
+  'Bhalwal', 'Bhimber', 'Bhirkan', 'Bhit Shah', 'Buner', 'Burhan', 'Chak Jhumra',
+  'Chakwal', 'Chaman', 'Charsadda', 'Chichawatni', 'Chiniot', 'Chishtian', 'Chitral',
+  'Choa Saidan Shah', 'Chuhar Kana', 'Chunian', 'Dadu', 'Darya Khan', 'Daska',
+  'Dera Bugti', 'Dera Ghazi Khan', 'Dera Ismail Khan', 'Dera Murad Jamali',
+  'Deska', 'Dhatta', 'Digri', 'Dina', 'Dinga', 'Dir', 'Doaba', 'Dokri',
+  'Dunga Bunga', 'Dunyapur', 'Eminabad', 'Faisalabad', 'Faqirwali', 'Faruka',
+  'Fateh Jang', 'Fatehpur', 'Ferozewala', 'Fort Abbas', 'Gadoon', 'Gambat',
+  'Garh Maharaja', 'Gariyasin', 'Ghakar', 'Ghakhar Mandi', 'Ghanche', 'Ghazni',
+  'Ghotki', 'Gilgit', 'Gujar Khan', 'Gujranwala', 'Gujrat', 'Gwadar', 'Hafizabad',
+  'Hala', 'Hangu', 'Haripur', 'Haroonabad', 'Hasilpur', 'Hattar', 'Haveli',
+  'Havelian', 'Hazro', 'Hub', 'Hyderabad', 'Islamabad', 'Iskandarabad', 'Jacobabad',
+  'Jahanian', 'Jahangira', 'Jalalpur Jattan', 'Jalalpur Pirwala', 'Jampur',
+  'Jamshoro', 'Jand', 'Jaranwala', 'Jatoi', 'Jauharabad', 'Jhal Magsi',
+  'Jhang', 'Jhelum', 'Johi', 'Kabirwala', 'Kachhi', 'Kahuta', 'Kalam',
+  'Kalat', 'Kalur Kot', 'Kamalia', 'Kamar Mushani', 'Kamber', 'Kameer',
+  'Kamoke', 'Kandhkot', 'Kandiaro', 'Karak', 'Karachi', 'Karianwala',
+  'Karor Lal Esan', 'Kashmir', 'Kashmore', 'Kasur', 'Kazi Ahmed', 'Khairpur',
+  'Khan Bela', 'Khanewal', 'Khangah Dogran', 'Khanpur', 'Khar', 'Kharian',
+  'Khipro', 'Khokhra', 'Khushab', 'Khuzdar', 'Killa Abdullah', 'Killa Saifullah',
+  'Kohlu', 'Kot Addu', 'Kot Diji', 'Kot Ghulam Muhammad', 'Kot Moman',
+  'Kot Radha Kishan', 'Kotli', 'Kotri', 'Kumb', 'Kundian', 'Kunjah', 'Kunri',
+  'Lahore', 'Lakki Marwat', 'Lala Musa', 'Lalamusa', 'Larkana', 'Lasbela',
+  'Layyah', 'Leiah', 'Lodhran', 'Loralai', 'Lower Dir', 'Ludhan', 'Mailsi',
+  'Makli', 'Malanpur', 'Malir', 'Mamu Kanjan', 'Manawala', 'Mandi Bahauddin',
+  'Mangla', 'Mangowal', 'Mansehra', 'Mardan', 'Mari Indus', 'Mastung', 'Matli',
+  'Mehar', 'Mehmood Kot', 'Mian Channu', 'Mianwali', 'Minchinabad', 'Mingora',
+  'Miran Shah', 'Mirkhani', 'Mirpur', 'Mirpur Khas', 'Mirpur Mathelo', 'Mithi',
+  'Mithra', 'Moghalpura', 'Moro', 'Multan', 'Muridke', 'Murree', 'Musa Khel',
+  'Muzaffarabad', 'Muzaffargarh', 'Nankana Sahib', 'Narowal', 'Nasarpur',
+  'Naseerabad', 'Naushahro Feroze', 'Nawabshah', 'Nazimabad', 'Neelam',
+  'New Karachi', 'Nooriabad', 'Noshki', 'Nowshera', 'Nowshera Virkan',
+  'Okara', 'Ormara', 'Pak Pattan', 'Panjgur', 'Panno Aqil', 'Parachinar',
+  'Pasni', 'Pattoki', 'Peshawar', 'Phalia', 'Pind Dadan Khan', 'Pindi Bhattian',
+  'Pindi Gheb', 'Pir Jo Goth', 'Pir Mahal', 'Pishin', 'Plague', 'Qadirpur',
+  'Qalandarabad', 'Qambar', 'Qila Didar Singh', 'Quetta', 'Rabwah', 'Rahim Yar Khan',
+  'Raiwind', 'Rajanpur', 'Rajo Khanani', 'Ranipur', 'Ratodero', 'Rawalakot',
+  'Rawalpindi', 'Renala Khurd', 'Rohri', 'Sadiqabad', 'Sahiwal', 'Sajawal',
+  'Sakrand', 'Sambrial', 'Sanghar', 'Sangla Hill', 'Sanjawi', 'Sann', 'Sarai Alamgir',
+  'Sarai Naurang', 'Sarai Sidhu', 'Sargodha', 'Sehwan', 'Shabqadar', 'Shahdadkot',
+  'Shahdadpur', 'Shahkot', 'Shahpur Chakar', 'Shahpur', 'Shakargarh',
+  'Shangla', 'Shankia', 'Sheikhupura', 'Shikarpur', 'Shujaabad', 'Sialkot',
+  'Sibi', 'Sijawal', 'Sillanwali', 'Sindhri', 'Sita Road', 'Skardu', 'Sobhodero',
+  'Sohawa', 'Sohbatpur', 'Sukkur', 'Surkhab', 'Swabi', 'Swat', 'Taftan',
+  'Talat', 'Talagang', 'Talhar', 'Tandlianwala', 'Tando Adam', 'Tando Allahyar',
+  'Tando Bago', 'Tando Jam', 'Tando Muhammad Khan', 'Tank', 'Tarikabad',
+  'Tarnol', 'Tarpashar', 'Taunsa', 'Taxila', 'Thari Mirwah', 'Thatta',
+  'Ther Iindher', 'Thul', 'Timergara', 'Toba Tek Singh', 'Tordher',
+  'Turbat', 'Ubaro', 'Uch', 'Umarkot', 'Upper Dir', 'Usta Muhammad',
+  'Vehari', 'Wadh', 'Wah Cantt', 'Wan Radha Ram', 'Warburton', 'Wazirabad',
+  'Yazman', 'Zafarwal', 'Zahir Pir', 'Zamzama', 'Zhob',
+];
+
 interface City { id: string; name: string; }
 interface Route { id: string; from_city: { id: string; name: string }; to_city: { id: string; name: string }; base_price: number; home_delivery: boolean; bilty_available: boolean; estimated_days: number; }
 interface FurnitureMultiplier { category_name: string; additional_cost: number; }
@@ -133,6 +188,18 @@ export default function CheckoutPage() {
     if (!deliveryData || !selectedCityId) return { cost: 0, routeFound: false, breakdown: [] };
     return calcDeliveryCost(deliveryData, selectedCityId, totalQty, items);
   }, [deliveryData, selectedCityId, totalQty, items]);
+
+  const allCities = useMemo(() => {
+    if (!deliveryData) return ALL_PAKISTAN_CITIES.map(n => ({ id: `custom-${n}`, name: n }));
+    const dbNames = new Set(deliveryData.cities.map(c => c.name.toLowerCase()));
+    const merged = [...deliveryData.cities];
+    for (const name of ALL_PAKISTAN_CITIES) {
+      if (!dbNames.has(name.toLowerCase())) {
+        merged.push({ id: `custom-${name}`, name });
+      }
+    }
+    return merged;
+  }, [deliveryData]);
 
   const delivery = deliveryInfo.cost;
   const total = subtotal + delivery;
@@ -288,9 +355,9 @@ export default function CheckoutPage() {
                       )}
                     />
                   </div>
-                  {cityDropdownOpen && deliveryData && cityInput && deliveryData.cities.filter(c => c.name.toLowerCase().includes(cityInput.toLowerCase())).length > 0 && (
+                  {cityDropdownOpen && cityInput && allCities.filter(c => c.name.toLowerCase().includes(cityInput.toLowerCase())).length > 0 && (
                     <div className="absolute z-50 mt-1 w-full rounded-xl bg-[#1a1d2e] border border-white/10 shadow-xl max-h-60 overflow-y-auto">
-                      {deliveryData.cities
+                      {allCities
                         .filter(c => c.name.toLowerCase().includes(cityInput.toLowerCase()))
                         .map((city) => (
                           <button
@@ -302,8 +369,9 @@ export default function CheckoutPage() {
                               selectedCityId === city.id ? 'bg-accent/10 text-accent' : 'text-white hover:bg-white/10'
                             )}
                           >
-                            <MapPin className="h-3.5 w-3.5 text-accent/50" />
+                            <MapPin className={cn('h-3.5 w-3.5', city.id.startsWith('custom-') ? 'text-white/30' : 'text-accent/50')} />
                             {city.name}
+                            {city.id.startsWith('custom-') && <span className="ml-auto text-[10px] text-white/20">(other)</span>}
                           </button>
                       ))}
                     </div>

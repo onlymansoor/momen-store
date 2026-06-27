@@ -392,6 +392,11 @@ export default function NewProductPage() {
             </div>
             <Input label="Custom Delivery Fee (Rs)" type="number" step="0.01" value={form.delivery_override} onChange={e => updateField('delivery_override', e.target.value)} placeholder="Leave empty to use route overrides below" />
             <p className="text-xs text-white-muted -mt-2">If set, this overrides ALL route prices below.</p>
+            {deliveryInfo && (
+              <div className="text-xs text-white-muted/70 bg-white/5 rounded-lg px-3 py-2">
+                <span className="text-accent font-medium">Rs {deliveryInfo.globalPrice.toLocaleString()}</span> — global fallback rate (used when no route matches the city)
+              </div>
+            )}
             {deliveryInfo && deliveryInfo.routes.length > 0 && (
               <div className="space-y-2">
                 <p className="text-sm font-medium text-white">Per-Route Delivery Overrides</p>
