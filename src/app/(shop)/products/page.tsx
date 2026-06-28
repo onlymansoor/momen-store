@@ -86,7 +86,8 @@ function ProductsContent() {
         .eq('is_active', true);
 
       if (filters.category) {
-        query = query.eq('category.slug', filters.category);
+        const { data: catData } = await supabase.from('categories').select('id').eq('slug', filters.category).single();
+        if (catData) query = query.eq('category_id', catData.id);
       }
       if (filters.minPrice) {
         query = query.gte('price', filters.minPrice);
