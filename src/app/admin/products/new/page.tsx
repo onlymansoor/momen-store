@@ -341,7 +341,23 @@ export default function NewProductPage() {
                 type="text"
                 value={urlInput}
                 onChange={e => setUrlInput(e.target.value)}
-                placeholder="Or paste image URL and press Add"
+                onPaste={async (e) => {
+                  const items = e.clipboardData?.items;
+                  if (!items) return;
+                  for (const item of items) {
+                    if (item.type.startsWith('image/')) {
+                      e.preventDefault();
+                      const file = item.getAsFile();
+                      if (file) {
+                        const preview = URL.createObjectURL(file);
+                        setImages(prev => [...prev, { file, preview }]);
+                        toast.success('Image pasted from clipboard');
+                      }
+                      return;
+                    }
+                  }
+                }}
+                placeholder="Paste image URL or Ctrl+V an image"
                 className="flex-1 h-10 rounded-lg glass px-3 text-sm text-white placeholder:text-white-muted outline-none focus:ring-2 focus:ring-accent/50"
               />
               <Button

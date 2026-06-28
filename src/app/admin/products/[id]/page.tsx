@@ -373,7 +373,7 @@ export default function EditProductPage() {
             </div>
             <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
             <div className="flex gap-2">
-              <input type="text" value={urlInput} onChange={e => setUrlInput(e.target.value)} placeholder="Or paste image URL and press Add" className="flex-1 h-10 rounded-lg glass px-3 text-sm text-white placeholder:text-white-muted outline-none focus:ring-2 focus:ring-accent/50" />
+              <input type="text" value={urlInput} onChange={e => setUrlInput(e.target.value)} onPaste={async (e) => { const items = e.clipboardData?.items; if (!items) return; for (const item of items) { if (item.type.startsWith('image/')) { e.preventDefault(); const file = item.getAsFile(); if (file) { const preview = URL.createObjectURL(file); setNewImages(prev => [...prev, { file, preview }]); toast.success('Image pasted from clipboard'); } return; } } }} placeholder="Paste image URL or Ctrl+V an image" className="flex-1 h-10 rounded-lg glass px-3 text-sm text-white placeholder:text-white-muted outline-none focus:ring-2 focus:ring-accent/50" />
               <Button type="button" variant="secondary" onClick={() => { if (urlInput.trim()) { setNewImageUrls(prev => [...prev, urlInput.trim()]); setUrlInput(''); } }}>Add</Button>
             </div>
             {newImageUrls.length > 0 && (
