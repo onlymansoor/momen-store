@@ -9,10 +9,10 @@ CREATE TABLE IF NOT EXISTS review_links (
 
 ALTER TABLE review_links ENABLE ROW LEVEL SECURITY;
 
--- App uses anon key everywhere (service_role key is broken)
-CREATE POLICY "anon insert review_links" ON review_links FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY "anon select unused review_links" ON review_links FOR SELECT TO anon USING (is_used = FALSE);
-CREATE POLICY "anon update review_links" ON review_links FOR UPDATE TO anon USING (is_used = FALSE);
+-- Covers both anon (unauthenticated) and authenticated (logged-in admin) roles
+CREATE POLICY "anyone insert review_links" ON review_links FOR INSERT WITH CHECK (true);
+CREATE POLICY "anyone select unused review_links" ON review_links FOR SELECT USING (is_used = FALSE);
+CREATE POLICY "anyone update review_links" ON review_links FOR UPDATE USING (is_used = FALSE);
 
 -- RPC for submitting review and marking link as used (bypasses RLS)
 CREATE OR REPLACE FUNCTION submit_review_and_use_link(
