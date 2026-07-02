@@ -28,9 +28,31 @@ export default function ReviewsPage() {
   const [filter, setFilter] = useState('all');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [products, setProducts] = useState<{ id: string; name: string }[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState('');
+  const [generatedLink, setGeneratedLink] = useState('');
   const supabase = createClient();
 
-  useEffect(() => { loadReviews(); }, [filter]);
+  useEffect(() => {
+    loadReviews();
+    loadProducts();
+  }, [filter]);
+
+  async function loadProducts() {
+    const { data } = await supabase.from('products').select('id, name').eq('is_active', true);
+    setProducts(data || []);
+  }
+
+  async function generateLink() {
+    if (!selectedProductId) return;
+    const { data, error } = await supabase.from('review_links').insert({ product_id: selectedProductId }).select('id').single();
+    if (error) toast.error(error.message);
+    else {
+      const url = `${window.location.origin}/review/${data.id}`;
+      setGeneratedLink(url);
+      toast.success('Link generated');
+    }
+  }
 
   async function loadReviews() {
     setLoading(true);
@@ -97,6 +119,26 @@ export default function ReviewsPage() {
           className="w-44"
         />
       </div>
+
+      <Card className="p-5">
+        <h2 className="text-lg font-semibold text-white mb-4">Generate Review Link</h2>
+        <div className="flex gap-4 items-end">
+          <Select
+            label="Select Product"
+            options={products.map(p => ({ value: p.id, label: p.name }))}
+            value={selectedProductId}
+            onValueChange={setSelectedProductId}
+            className="flex-1"
+          />
+          <Button onClick={generateLink} disabled={!selectedProductId}>Generate Link</Button>
+        </div>
+        {generatedLink && (
+          <div className="mt-4 flex gap-2">
+            <Input value={generatedLink} readOnly className="flex-1" />
+            <Button variant="secondary" onClick={() => { navigator.clipboard.writeText(generatedLink); toast.success('Copied!'); }}>Copy</Button>
+          </div>
+        )}
+      </Card>
 
       {loading ? (
         <div className="flex items-center justify-center h-64"><Spinner size={36} /></div>
