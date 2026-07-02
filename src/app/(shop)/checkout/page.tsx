@@ -459,21 +459,18 @@ export default function CheckoutPage() {
                       <input id="payment-proof" type="file" accept="image/*" className="hidden" onChange={(e) => setPaymentProof(e.target.files?.[0] || null)} />
                     </div>
                     {errors.paymentProof && <p className="text-xs text-red-400 mt-1">{errors.paymentProof}</p>}
-        </div>
-
-        <Button size="lg" variant="primary" className="w-full mt-6 lg:hidden" loading={loading} onClick={handlePlaceOrder}>
-          <CheckCircle className="h-5 w-5" />
-          {manualQuote ? `Place Order - ${formatPrice(subtotal)} + Delivery (TBD)` : `Place Order - ${formatPrice(total)}`}
-        </Button>
-      </div>
+                  </div>
+                </div>
               )}
+
+              <Button size="lg" variant="primary" className="w-full hidden lg:flex" loading={loading} onClick={handlePlaceOrder}>
+                <CheckCircle className="h-5 w-5" />
+                {manualQuote ? `Place Order - ${formatPrice(subtotal)} + Delivery (TBD)` : `Place Order - ${formatPrice(total)}`}
+              </Button>
             </div>
 
-            <Button size="lg" variant="primary" className="w-full hidden lg:flex" loading={loading} onClick={handlePlaceOrder}>
-              <CheckCircle className="h-5 w-5" />
-              {manualQuote ? `Place Order - ${formatPrice(subtotal)} + Delivery (TBD)` : `Place Order - ${formatPrice(total)}`}
-            </Button>
           </div>
+          <div className="lg:col-span-2 order-1 lg:order-2">
             <div className="glass rounded-2xl p-4 sm:p-6 space-y-4 lg:sticky lg:top-24">
               <h2 className="text-lg font-semibold text-white">Order Summary</h2>
               <div className="space-y-3 max-h-48 sm:max-h-64 overflow-y-auto no-scrollbar">
@@ -548,6 +545,11 @@ export default function CheckoutPage() {
             </div>
           </div>
         </div>
+
+        <Button size="lg" variant="primary" className="w-full mt-6 lg:hidden" loading={loading} onClick={handlePlaceOrder}>
+          <CheckCircle className="h-5 w-5" />
+          {manualQuote ? `Place Order - ${formatPrice(subtotal)} + Delivery (TBD)` : `Place Order - ${formatPrice(total)}`}
+        </Button>
       </div>
     </div>
   );
