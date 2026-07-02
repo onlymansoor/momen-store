@@ -317,26 +317,26 @@ export default function CheckoutPage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Breadcrumb items={[{ label: 'Cart', href: '/cart' }, { label: 'Checkout' }]} className="mb-6" />
 
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-white">Checkout</h1>
           <Link href="/auth/login" className="text-sm text-accent hover:text-accent-light transition-colors">
             Sign in for faster checkout
           </Link>
         </div>
 
-        <div className="grid lg:grid-cols-5 gap-8">
-          <div className="lg:col-span-3 space-y-6">
-            <div className="glass rounded-2xl p-6">
+        <div className="grid lg:grid-cols-5 gap-6">
+          <div className="lg:col-span-3 space-y-6 order-2 lg:order-1">
+            <div className="glass rounded-2xl p-4 sm:p-6">
               <h2 className="text-lg font-semibold text-white mb-4">Customer Information</h2>
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input label="Full Name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} error={errors.name} placeholder="John Doe" />
                 <Input label="Email *" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} error={errors.email} placeholder="john@example.com" />
                 <Input label="Phone *" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} error={errors.phone} placeholder="03XX-XXXXXXX" />
                 <Input label="Phone 2 (Optional)" type="tel" value={form.phone2} onChange={(e) => setForm({ ...form, phone2: e.target.value })} placeholder="03XX-XXXXXXX" />
-                <div className="relative">
+                <div className="relative sm:col-span-2">
                   <label className="block text-sm font-medium text-white-muted mb-1">City *</label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent" />
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent pointer-events-none" />
                     <input
                       type="text"
                       value={cityInput}
@@ -363,9 +363,10 @@ export default function CheckoutPage() {
                     />
                   </div>
                   {cityDropdownOpen && cityInput && allCities.filter(c => c.name.toLowerCase().includes(cityInput.toLowerCase())).length > 0 && (
-                    <div className="absolute z-50 mt-1 w-full rounded-xl bg-[#1a1d2e] border border-white/10 shadow-xl max-h-60 overflow-y-auto">
+                    <div className="absolute z-50 left-0 right-0 mt-1 rounded-xl bg-[#1a1d2e] border border-white/10 shadow-xl max-h-48 overflow-y-auto">
                       {allCities
                         .filter(c => c.name.toLowerCase().includes(cityInput.toLowerCase()))
+                        .slice(0, 50)
                         .map((city) => (
                           <button
                             key={city.id}
@@ -376,9 +377,9 @@ export default function CheckoutPage() {
                               selectedCityId === city.id ? 'bg-accent/10 text-accent' : 'text-white hover:bg-white/10'
                             )}
                           >
-                            <MapPin className={cn('h-3.5 w-3.5', city.id.startsWith('custom-') ? 'text-white/30' : 'text-accent/50')} />
-                            {city.name}
-                            {city.id.startsWith('custom-') && <span className="ml-auto text-[10px] text-white/20">(other)</span>}
+                            <MapPin className={cn('h-3.5 w-3.5 shrink-0', city.id.startsWith('custom-') ? 'text-white/30' : 'text-accent/50')} />
+                            <span className="truncate">{city.name}</span>
+                            {city.id.startsWith('custom-') && <span className="ml-auto text-[10px] text-white/20 shrink-0">(other)</span>}
                           </button>
                       ))}
                     </div>
@@ -458,21 +459,24 @@ export default function CheckoutPage() {
                       <input id="payment-proof" type="file" accept="image/*" className="hidden" onChange={(e) => setPaymentProof(e.target.files?.[0] || null)} />
                     </div>
                     {errors.paymentProof && <p className="text-xs text-red-400 mt-1">{errors.paymentProof}</p>}
-                  </div>
-                </div>
+        </div>
+
+        <Button size="lg" variant="primary" className="w-full mt-6 lg:hidden" loading={loading} onClick={handlePlaceOrder}>
+          <CheckCircle className="h-5 w-5" />
+          {manualQuote ? `Place Order - ${formatPrice(subtotal)} + Delivery (TBD)` : `Place Order - ${formatPrice(total)}`}
+        </Button>
+      </div>
               )}
             </div>
 
-            <Button size="lg" variant="primary" className="w-full" loading={loading} onClick={handlePlaceOrder}>
+            <Button size="lg" variant="primary" className="w-full hidden lg:flex" loading={loading} onClick={handlePlaceOrder}>
               <CheckCircle className="h-5 w-5" />
               {manualQuote ? `Place Order - ${formatPrice(subtotal)} + Delivery (TBD)` : `Place Order - ${formatPrice(total)}`}
             </Button>
           </div>
-
-          <div className="lg:col-span-2">
-            <div className="glass rounded-2xl p-6 space-y-4 sticky top-24">
+            <div className="glass rounded-2xl p-4 sm:p-6 space-y-4 lg:sticky lg:top-24">
               <h2 className="text-lg font-semibold text-white">Order Summary</h2>
-              <div className="space-y-3 max-h-64 overflow-y-auto no-scrollbar">
+              <div className="space-y-3 max-h-48 sm:max-h-64 overflow-y-auto no-scrollbar">
                 {items.map((item) => (
                   <div key={item.product_id} className="flex items-center gap-3">
                     <div className="relative h-14 w-14 shrink-0 rounded-lg overflow-hidden bg-white/5">

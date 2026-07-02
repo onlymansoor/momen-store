@@ -78,16 +78,32 @@ export default function LinkReviewPage() {
       }
       for (const url of imageUrls) uploadedUrls.push(url);
 
-      // Call RPC to insert review and mark link as used
-      const { error } = await supabase.rpc('submit_review_and_use_link', {
+      // Call RPC to insert review and mark link as used (returns review_id)
+      const { data: reviewId, error: rpcError } = await supabase.rpc('submit_review_and_use_link', {
         p_link_id: linkId,
         p_product_id: data.product_id,
         p_rating: rating,
         p_comment: title ? `${title}: ${comment}` : comment,
-        p_images: uploadedUrls
+        p_customer_name: customerName.trim(),
       });
 
-      if (error) throw error;
+      if (rpcError) throw rpcError;
+
+      // Upload images to review_images table
+      for (let i = 0; i < imageFiles.length; i++) {
+        const ext = imageFiles[i].name.split('.').pop();
+        const filePath = `reviews/${reviewId}/${Date.now()}-${i}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from('reviews').upload(filePath, imageFiles[i]);
+        if (!uploadErr) {
+          const { data: { publicUrl } } = supabase.storage.from('reviews').getPublicUrl(filePath);
+          uploadedUrls.push(publicUrl);
+        }
+      }
+      for (const url of imageUrls) uploadedUrls.push(url);
+      if (uploadedUrls.length > 0) {
+        const imageRows = uploadedUrls.map((url, i) => ({ review_id: reviewId, image_url: url, sort_order: i }));
+        await supabase.from('review_images').insert(imageRows);
+      }
 
       toast.success('Review submitted! Thank you.');
       router.push(`/products/${data.product.slug}`);
@@ -129,6 +145,32 @@ export default function LinkReviewPage() {
             <div>
               <label className="block text-sm text-white-muted mb-1">Comment</label>
               <textarea value={comment} onChange={e => setComment(e.target.value)} placeholder="Share your experience..." rows={4} className="w-full rounded-lg glass px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-accent/50 resize-none" />
+            </div>
+            <div>
+              <label className="block text-sm text-white-muted mb-2">Photos (optional)</label>
+              <div className="flex gap-2 mb-3 flex-wrap">
+                {imagePreviews.map((preview, i) => (
+                  <div key={i} className="relative h-16 w-16 rounded-lg overflow-hidden bg-white/5">
+                    <img src={preview} alt="" className="h-full w-full object-cover" />
+                    <button type="button" onClick={() => removeImage(i)} className="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center"><X className="h-2 w-2 text-white" /></button>
+                  </div>
+                ))}
+                <label className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-white/20 text-white-muted hover:border-accent/50 hover:text-accent transition-colors">
+                  <Upload className="h-5 w-5" />
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageSelect} />
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input type="text" value={urlInput} onChange={e => setUrlInput(e.target.value)} placeholder="Or paste image URL" className="flex-1 h-9 rounded-lg glass px-3 text-sm text-white placeholder:text-white-muted outline-none focus:ring-2 focus:ring-accent/50" />
+                <Button type="button" variant="secondary" size="sm" onClick={() => { if (urlInput.trim()) { setImageUrls(prev => [...prev, urlInput.trim()]); setUrlInput(''); } }}>Add</Button>
+              </div>
+              {imageUrls.length > 0 && (
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {imageUrls.map((url, i) => (
+                    <span key={i} className="flex items-center gap-1 text-xs text-white-muted bg-white/5 rounded px-2 py-1">URL {i + 1} <button type="button" onClick={() => setImageUrls(prev => prev.filter((_, j) => j !== i))} className="text-red-400">x</button></span>
+                  ))}
+                </div>
+              )}
             </div>
             <Button type="submit" size="lg" className="w-full" loading={submitting}>Submit Review</Button>
           </form>
