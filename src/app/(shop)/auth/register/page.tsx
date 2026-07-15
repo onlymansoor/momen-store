@@ -53,6 +53,7 @@ export default function RegisterPage() {
         email: form.email,
         name: form.name,
         phone: form.phone,
+        password_hash: '',
       });
 
       if (profileError) {

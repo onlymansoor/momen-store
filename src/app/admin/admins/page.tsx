@@ -87,9 +87,6 @@ export default function AdminsPage() {
     setSaving(true);
     try {
       if (editingAdmin) {
-        const updates: any = { name: form.name.trim(), email: form.email.trim(), role: form.role };
-        if (form.password) updates.password_hash = form.password;
-
         const { error: updateError } = await supabase
           .from('admins')
           .update({ name: form.name.trim(), email: form.email.trim(), role: form.role })
@@ -97,8 +94,7 @@ export default function AdminsPage() {
         if (updateError) throw updateError;
 
         if (form.password) {
-          const { error: authError } = await supabase.auth.admin.updateUserById(editingAdmin.id, { password: form.password });
-          if (authError) throw authError;
+          toast('Profile updated. Password changes must be done via the "Forgot password" flow.', { icon: 'ℹ️' });
         }
         toast.success('Admin updated');
       } else {
