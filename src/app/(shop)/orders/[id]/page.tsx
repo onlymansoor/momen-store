@@ -56,6 +56,14 @@ export default function OrderDetailPage() {
           .select('*')
           .eq('order_id', orderData.order_number);
         if (itemsData) setItems(itemsData);
+        if (typeof window !== 'undefined' && (window as any).fbq) {
+          (window as any).fbq('track', 'Purchase', {
+            value: orderData.total_amount || 0,
+            currency: 'PKR',
+            content_ids: itemsData?.map(i => i.product_id) || [],
+            content_type: 'product',
+          });
+        }
       }
       setLoading(false);
     }
