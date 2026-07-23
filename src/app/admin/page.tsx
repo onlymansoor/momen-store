@@ -17,7 +17,7 @@ import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import { createClient } from '@/lib/supabase/client';
-import { formatPrice, formatDateTime, getOrderStatusColor, getOrderStatusLabel, getTimeAgo } from '@/lib/utils';
+import { cn, formatPrice, formatDateTime, getOrderStatusColor, getOrderStatusLabel, getTimeAgo } from '@/lib/utils';
 import type { Order, Product } from '@/lib/types';
 
 interface DashboardStats {
@@ -29,6 +29,16 @@ interface DashboardStats {
   ordersChange: number;
 }
 
+interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string | null;
+  data: Record<string, any> | null;
+  is_read: boolean;
+  created_at: string;
+}
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     todaySales: 0, totalOrders: 0, totalProducts: 0, totalCustomers: 0,
@@ -36,6 +46,7 @@ export default function AdminDashboard() {
   });
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
@@ -51,12 +62,13 @@ export default function AdminDashboard() {
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString();
 
-      const [ordersRes, productsRes, customersRes, todayOrdersRes, yesterdayOrdersRes] = await Promise.all([
+      const [ordersRes, productsRes, customersRes, todayOrdersRes, yesterdayOrdersRes, notifRes] = await Promise.all([
         supabase.from('orders').select('*').order('created_at', { ascending: false }),
         supabase.from('products').select('*').order('created_at', { ascending: false }),
         supabase.from('customers').select('id', { count: 'exact', head: true }),
         supabase.from('orders').select('total').gte('created_at', todayStr).eq('order_status', 'delivered'),
         supabase.from('orders').select('total').gte('created_at', yesterdayStr).lt('created_at', todayStr).eq('order_status', 'delivered'),
+        supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(5),
       ]);
 
       const todaySales = (todayOrdersRes.data || []).reduce((s, o) => s + (o.total || 0), 0);
@@ -84,6 +96,8 @@ export default function AdminDashboard() {
       });
 
       setRecentOrders((ordersRes.data || []).slice(0, 10));
+
+      setNotifications(notifRes.data || []);
 
       const lowStock = (productsRes.data || []).filter(p => p.stock_quantity <= p.low_stock_threshold && p.stock_quantity > 0);
       setLowStockProducts(lowStock);
@@ -249,18 +263,24 @@ export default function AdminDashboard() {
               <h2 className="text-lg font-semibold text-white">Recent Notifications</h2>
             </div>
             <div className="space-y-3">
-              <div className="p-2 rounded-lg bg-accent/5 border border-accent/10">
-                <p className="text-sm text-white">New order received</p>
-                <p className="text-xs text-white-muted">2 minutes ago</p>
-              </div>
-              <div className="p-2 rounded-lg bg-white/5">
-                <p className="text-sm text-white-muted">Payment verification pending</p>
-                <p className="text-xs text-white-muted">1 hour ago</p>
-              </div>
-              <div className="p-2 rounded-lg bg-white/5">
-                <p className="text-sm text-white-muted">Product review submitted</p>
-                <p className="text-xs text-white-muted">3 hours ago</p>
-              </div>
+              {notifications.length === 0 ? (
+                <p className="text-sm text-white-muted">No notifications yet</p>
+              ) : (
+                notifications.map((notif, i) => (
+                  <div
+                    key={notif.id}
+                    className={cn(
+                      'p-2 rounded-lg',
+                      i === 0 ? 'bg-accent/5 border border-accent/10' : 'bg-white/5'
+                    )}
+                  >
+                    <p className={cn('text-sm', i === 0 ? 'text-white' : 'text-white-muted')}>
+                      {notif.title}
+                    </p>
+                    <p className="text-xs text-white-muted">{getTimeAgo(notif.created_at)}</p>
+                  </div>
+                ))
+              )}
             </div>
           </Card>
         </div>

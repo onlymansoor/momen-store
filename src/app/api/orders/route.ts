@@ -132,8 +132,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Send notification
+    // Send notifications
     await sendDiscordNotification(orderData, items);
+    await supFetch('POST', 'rpc/insert_notification', {
+      notif_type: 'new_order',
+      notif_title: `New order #${orderData.order_number}`,
+      notif_message: `${orderData.customer_name} placed an order of PKR ${orderData.total.toLocaleString()}`,
+      notif_data: { order_id: orderData.id, order_number: orderData.order_number },
+    });
 
     return NextResponse.json({ message: 'Order created successfully', order: orderData }, { status: 201 });
   } catch (error: any) {
