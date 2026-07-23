@@ -1,15 +1,20 @@
 'use client';
 
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MessageCircle } from 'lucide-react';
-
-const WHATSAPP_NUMBER = '923345702532';
-const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
+import { useStoreSettings } from '@/lib/store/settings-store';
 
 export default function WhatsAppButton() {
+  const { whatsapp_number, load } = useStoreSettings();
+
+  useEffect(() => { load(); }, []);
+
+  const url = `https://wa.me/${whatsapp_number}`;
+
   return (
     <motion.a
-      href={WHATSAPP_URL}
+      href={url}
       target="_blank"
       rel="noopener noreferrer"
       initial={{ scale: 0, opacity: 0 }}

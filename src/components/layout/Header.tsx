@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, ShoppingCart, Heart, User, Menu, ChevronDown } from 'lucide-react';
@@ -9,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { useCartStore } from '@/lib/store/cart-store';
 import { useWishlistStore } from '@/lib/store/wishlist-store';
 import { useUIStore } from '@/lib/store/ui-store';
+import { useStoreSettings } from '@/lib/store/settings-store';
 import { useCategories } from '@/hooks/useCategories';
 import MobileNav from './MobileNav';
 import CartDrawer from './CartDrawer';
@@ -25,6 +27,9 @@ export default function Header() {
   const cartCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0));
   const wishlistCount = useWishlistStore((s) => s.items.length);
   const { categories } = useCategories();
+  const { logo_url, store_name, load: loadSettings } = useStoreSettings();
+
+  useEffect(() => { loadSettings(); }, []);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -38,8 +43,14 @@ export default function Header() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-4">
             <Link href="/" className="text-xl font-bold shrink-0">
-              <span className="text-gradient">Momen</span>{' '}
-              <span className="text-white">Store</span>
+              {logo_url ? (
+                <Image src={logo_url} alt={store_name} width={120} height={32} className="h-8 w-auto" />
+              ) : (
+                <>
+                  <span className="text-gradient">Momen</span>{' '}
+                  <span className="text-white">Store</span>
+                </>
+              )}
             </Link>
 
             <nav className="hidden lg:flex items-center gap-1">
