@@ -42,15 +42,12 @@ export default function Header() {
       <header className="fixed top-0 left-0 right-0 z-40 glass">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-4">
-            <Link href="/" className="text-xl font-bold shrink-0">
+            <Link href="/" className="text-xl font-bold shrink-0 flex items-center gap-2">
               {logo_url ? (
                 <Image src={logo_url} alt={store_name} width={32} height={32} className="h-8 w-8 rounded-full object-cover" />
-              ) : (
-                <>
-                  <span className="text-gradient">Momen</span>{' '}
-                  <span className="text-white">Store</span>
-                </>
-              )}
+              ) : null}
+              <span className="text-gradient">{store_name.split(' ')[0]}</span>{' '}
+              <span className="text-white">{store_name.split(' ').slice(1).join(' ') || 'Store'}</span>
             </Link>
 
             <nav className="hidden lg:flex items-center gap-1">
