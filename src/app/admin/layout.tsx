@@ -140,7 +140,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className={cn('flex items-center h-16 px-4 border-b border-white/10', sidebarOpen ? 'justify-between' : 'justify-center')}>
             <Link href="/admin" className="flex items-center gap-3">
               {logo_url ? (
-                <Image src={logo_url} alt={store_name} width={32} height={32} className="h-8 w-8 rounded-lg object-cover" />
+                <Image src={logo_url} alt={store_name} width={32} height={32} className="h-8 w-8 rounded-full object-cover" />
               ) : (
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-primary font-bold text-sm">
                   MS

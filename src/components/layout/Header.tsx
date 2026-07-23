@@ -44,7 +44,7 @@ export default function Header() {
           <div className="flex h-16 items-center justify-between gap-4">
             <Link href="/" className="text-xl font-bold shrink-0">
               {logo_url ? (
-                <Image src={logo_url} alt={store_name} width={120} height={32} className="h-8 w-auto" />
+                <Image src={logo_url} alt={store_name} width={32} height={32} className="h-8 w-8 rounded-full object-cover" />
               ) : (
                 <>
                   <span className="text-gradient">Momen</span>{' '}
