@@ -2,7 +2,7 @@
 
 import Script from 'next/script';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 const PIXEL_ID = '1546210030517507';
 
@@ -15,19 +15,18 @@ declare global {
 
 export default function MetaPixel() {
   const pathname = usePathname();
-  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (loaded && window.fbq) {
+    if (typeof window !== 'undefined' && window.fbq) {
       window.fbq('track', 'PageView');
     }
-  }, [pathname, loaded]);
+  }, [pathname]);
 
   return (
     <>
       <Script
         id="meta-pixel"
-        strategy="afterInteractive"
+        strategy="beforeInteractive"
         dangerouslySetInnerHTML={{
           __html: `
             !function(f,b,e,v,n,t,s)
@@ -42,7 +41,6 @@ export default function MetaPixel() {
             fbq('track', 'PageView');
           `,
         }}
-        onLoad={() => setLoaded(true)}
       />
       <noscript>
         <img
