@@ -40,6 +40,15 @@ export const useCartStore = create<CartStore>()(
           }
           return { items: [...state.items, { ...item, quantity: 1 }] };
         });
+        if (typeof window !== 'undefined' && (window as any).fbq) {
+          (window as any).fbq('track', 'AddToCart', {
+            content_ids: [item.product_id],
+            content_name: item.name,
+            content_type: 'product',
+            value: item.price,
+            currency: 'PKR',
+          });
+        }
       },
       removeItem: (productId) => {
         set((state) => ({

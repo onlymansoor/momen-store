@@ -49,6 +49,16 @@ export default function ProductDetailPage() {
 
       if (productData) {
         setProduct(productData);
+        if (typeof window !== 'undefined' && (window as any).fbq) {
+          (window as any).fbq('track', 'ViewContent', {
+            value: productData.price,
+            currency: 'PKR',
+            content_ids: [productData.id],
+            content_name: productData.name,
+            content_category: productData.category?.name || '',
+            content_type: 'product',
+          });
+        }
         if (productData.category_id) {
           const { data: relatedData } = await supabase
             .from('products')

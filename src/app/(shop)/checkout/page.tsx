@@ -186,6 +186,16 @@ export default function CheckoutPage() {
         setEasypaisaAccounts([{ name: map.easypaisa_account_name || 'Momen Store', number: map.easypaisa_account_number || '', bank: 'Easypaisa' }]);
       }
     });
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      const store = useCartStore.getState();
+      (window as any).fbq('track', 'InitiateCheckout', {
+        value: store.getSubtotal(),
+        currency: 'PKR',
+        content_ids: store.items.map(i => i.product_id),
+        content_type: 'product',
+        num_items: store.items.reduce((s, i) => s + i.quantity, 0),
+      });
+    }
   }, []);
 
   const totalQty = useMemo(() => items.reduce((sum, i) => sum + i.quantity, 0), [items]);
