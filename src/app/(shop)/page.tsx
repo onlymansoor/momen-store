@@ -200,7 +200,7 @@ export default function HomePage() {
               <span className="text-gradient">{banner?.subtitle || 'Perfect Style'}</span>
             </h1>
             <p className="mt-4 text-base sm:text-lg text-white-muted max-w-lg leading-relaxed">
-              Shop the latest trends with premium quality products at unbeatable prices. Free delivery across Pakistan.
+              Shop the latest trends with premium quality products at unbeatable prices.
             </p>
             <div className="flex flex-wrap gap-3 mt-8">
               <Link href="/products">
