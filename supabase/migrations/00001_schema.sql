@@ -375,7 +375,7 @@ CREATE POLICY "Customers manage own cart" ON carts FOR ALL USING (auth.uid() = c
 
 -- Settings policies
 CREATE POLICY "Public read settings" ON settings FOR SELECT USING (true);
-CREATE POLICY "Admin manage settings" ON settings FOR ALL USING (EXISTS (SELECT 1 FROM admins WHERE id = auth.uid()));
+CREATE POLICY "Admin manage settings" ON settings FOR ALL USING (EXISTS (SELECT 1 FROM admins WHERE id = auth.uid())) WITH CHECK (EXISTS (SELECT 1 FROM admins WHERE id = auth.uid()));
 
 -- Notifications policies
 CREATE POLICY "Admin read notifications" ON notifications FOR SELECT USING (EXISTS (SELECT 1 FROM admins WHERE id = auth.uid()));
