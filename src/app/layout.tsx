@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import ToastProvider from "@/components/ui/Toast";
 import FBPixel from "@/components/FBPixel";
+import DynamicFavicon from "@/components/DynamicFavicon";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -46,6 +47,7 @@ export default function RootLayout({
         {children}
         <ToastProvider />
         <FBPixel />
+        <DynamicFavicon />
       </body>
     </html>
   );
