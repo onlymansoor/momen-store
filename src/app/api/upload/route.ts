@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { requireAdmin } from '@/lib/api-auth';
 
 const ALLOWED_BUCKETS = ['products', 'payment-screenshots', 'banners', 'feedback'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -7,6 +8,9 @@ const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'
 
 export async function POST(request: NextRequest) {
   try {
+    const authError = await requireAdmin(request);
+    if (authError) return authError;
+
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const bucket = formData.get('bucket') as string | null;

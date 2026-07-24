@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/api-auth';
 import type { OrderStatus, PaymentStatus } from '@/lib/types';
 
 const VALID_ORDER_STATUSES: OrderStatus[] = ['pending', 'payment_verification_pending', 'accepted', 'shipped', 'delivered', 'cancelled'];
@@ -68,6 +69,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authError = await requireAdmin(request);
+    if (authError) return authError;
+
     const { id } = await params;
     const body = await request.json();
     const { order_status, payment_status } = body;

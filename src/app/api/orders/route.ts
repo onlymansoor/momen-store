@@ -1,8 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
+
+const orderItemSchema = z.object({
+  product_id: z.string().uuid().nullable().optional(),
+  product_name: z.string().min(1).max(200),
+  product_image: z.string().max(500).nullable().optional(),
+  price: z.number().positive(),
+  quantity: z.number().int().positive().max(100),
+});
+
+const orderSchema = z.object({
+  customer_name: z.string().min(1).max(100),
+  customer_email: z.string().email().max(200),
+  customer_phone: z.string().min(1).max(30),
+  customer_phone2: z.string().max(30).nullable().optional(),
+  shipping_address: z.string().min(1).max(500),
+  shipping_city: z.string().min(1).max(100),
+  shipping_province: z.string().max(100).nullable().optional(),
+  shipping_zip: z.string().max(20).nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  payment_method: z.enum(['cod', 'easypaisa']),
+  delivery_charges: z.number().min(0).max(100000).optional(),
+  payment_proof: z.object({
+    image_url: z.string(),
+    account_name: z.string(),
+    account_number: z.string(),
+  }).nullable().optional(),
+  items: z.array(orderItemSchema).min(1).max(50),
+});
 
 function headers(authToken?: string) {
   return {
@@ -58,14 +87,14 @@ async function sendDiscordNotification(order: any, orderItems: any[]) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { customer_name, customer_email, customer_phone, customer_phone2, shipping_address, shipping_city, shipping_province, shipping_zip, notes, items, payment_method, payment_proof, delivery_charges: clientDelivery } = body;
 
-    if (!customer_name || !customer_email || !customer_phone || !shipping_address || !shipping_city || !items?.length || !payment_method) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    const parsed = orderSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.errors[0];
+      return NextResponse.json({ error: `${firstError.path.join('.')}: ${firstError.message}` }, { status: 400 });
     }
-    if (!['cod', 'easypaisa'].includes(payment_method)) {
-      return NextResponse.json({ error: 'Invalid payment method' }, { status: 400 });
-    }
+
+    const { customer_name, customer_email, customer_phone, customer_phone2, shipping_address, shipping_city, shipping_province, shipping_zip, notes, items, payment_method, payment_proof, delivery_charges: clientDelivery } = parsed.data;
 
     const subtotal = items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
     const delivery_charges = typeof clientDelivery === 'number' ? clientDelivery : 0;

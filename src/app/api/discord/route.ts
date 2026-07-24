@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/api-auth';
 
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    const authError = await requireAdmin(request);
+    if (authError) return authError;
+
     if (!DISCORD_WEBHOOK_URL) {
       return NextResponse.json(
         { error: 'DISCORD_WEBHOOK_URL is not configured' },
